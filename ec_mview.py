@@ -16,50 +16,114 @@ class ModelWindow(QtGui.QWidget):
         self.panel = QtGui.QWidget(self)
 
         self.tW = QtGui.QWidget(self)
-        self.tW.setGeometry(QtCore.QRect(0, 0, 801, 61))
+        self.tW.setGeometry(QtCore.QRect(0, 0, 801, 91))
         self.tW.setObjectName("tW")
         self.tL = QtGui.QGridLayout(self.tW)
         self.tL.setContentsMargins(5, 5, 5, 5)
         self.tL.setObjectName("TL")
+        self.tL.setColumnMinimumWidth(4, 10)
+
+        self.desc =("Min.","Max.")        
         
         #create the top label with dimensions
         self.labx = QtGui.QLabel(self.tW)
-        self.labx.setText('Dim. X')
+        self.labx.setText('X')
+        self.labx.setAlignment(QtCore.Qt.AlignCenter|QtCore.Qt.AlignVCenter)        
         self.laby = QtGui.QLabel(self.tW)
-        self.laby.setText('Dim. Y')          
+        self.laby.setText('Y')
+        self.laby.setAlignment(QtCore.Qt.AlignCenter|QtCore.Qt.AlignVCenter)          
         self.labz = QtGui.QLabel(self.tW)
-        self.labz.setText('Dim. Z')         
+        self.labz.setText('Z')         
+        self.labz.setAlignment(QtCore.Qt.AlignCenter|QtCore.Qt.AlignVCenter)
         
-        self.valx = QtGui.QLineEdit(self.tW)
-        self.valx.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
-        self.valy = QtGui.QLineEdit(self.tW)
-        self.valy.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
-        self.valz = QtGui.QLineEdit(self.tW)
-        self.valz.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+        self.lminx = QtGui.QLabel(self.tW)
+        self.lminx.setText(self.desc[0])
+        self.lminy = QtGui.QLabel(self.tW)
+        self.lminy.setText(self.desc[0])          
+        self.lminz = QtGui.QLabel(self.tW)
+        self.lminz.setText(self.desc[0])         
 
-        self.dlabx = QtGui.QLabel(self.tW)
-        self.dlabx.setText('mm')
-        self.dlaby = QtGui.QLabel(self.tW)
-        self.dlaby.setText('mm')          
-        self.dlabz = QtGui.QLabel(self.tW)
-        self.dlabz.setText('mm')         
+        
+        self.lmaxx = QtGui.QLabel(self.tW)
+        self.lmaxx.setText(self.desc[1])
+        self.lmaxy = QtGui.QLabel(self.tW)
+        self.lmaxy.setText(self.desc[1])          
+        self.lmaxz = QtGui.QLabel(self.tW)
+        self.lmaxz.setText(self.desc[1])          
+
+     
+        #self.valx = QtGui.QLineEdit(self.tW)
+        #self.valx.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+        #self.valy = QtGui.QLineEdit(self.tW)
+        #self.valy.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+        #self.valz = QtGui.QLineEdit(self.tW)
+        #self.valz.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+
+        self.vmx = QtGui.QLineEdit(self.tW)
+        self.vmx.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+        self.vmy = QtGui.QLineEdit(self.tW)
+        self.vmy.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+        self.vmz = QtGui.QLineEdit(self.tW)
+        self.vmz.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+
+        self.vMx = QtGui.QLineEdit(self.tW)
+        self.vMx.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+        self.vMy = QtGui.QLineEdit(self.tW)
+        self.vMy.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+        self.vMz = QtGui.QLineEdit(self.tW)
+        self.vMz.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+
+
+        #self.labu = QtGui.QLabel(self.tW)
+        #self.labu.setText('mm')
+
 
        
-        self.tL.addWidget(self.labx,1, 0, 1, 1)
-        self.tL.addWidget(self.valx,1, 1, 1 ,1)
-        self.tL.addWidget(self.dlabx,1, 2, 1, 1)
-        self.tL.addWidget(self.laby, 1, 4, 1, 1)
-        self.tL.addWidget(self.valy, 1, 5, 1, 1)
-        self.tL.addWidget(self.dlaby, 1, 6, 1, 1)
+        self.tL.addWidget(self.labx, 0, 1, 1, 4)
+        self.tL.addWidget(self.laby, 0, 5, 1, 4)
+        self.tL.addWidget(self.labz, 0, 9, 1, 4)
+        #self.tL.addWidget(self.labu,1, 0, 1, 1)        
+
+        self.tL.addWidget(self.lminx,1, 0, 1, 1)
+        self.tL.addWidget(self.vmx, 1, 1, 1 ,1)        
+        self.tL.addWidget(self.lmaxx, 1, 2, 1 ,1)        
+        self.tL.addWidget(self.vMx, 1, 3, 1 ,1) 
+
+        #self.tL.addWidget(self.valx,2, 1, 1 ,1)
+
+
+        self.tL.addWidget(self.lminy,1, 5, 1, 1)
+        self.tL.addWidget(self.vmy, 1, 6, 1 ,1)
+        self.tL.addWidget(self.lmaxy, 1, 7, 1 ,1)
+        self.tL.addWidget(self.vMy, 1, 1, 1 ,1)          
+        #self.tL.addWidget(self.valy, 2, 5, 1, 1)
+        #self.tL.addWidget(self.dlaby, 2, 6, 1, 1)
       
-        self.tL.addWidget(self.labz, 1, 8, 1, 1)
-        self.tL.addWidget(self.valz, 1, 9, 1, 1,)         
-        self.tL.addWidget(self.dlabz, 1, 10, 1, 1)
+
+        self.tL.addWidget(self.lminz,1, 9, 1, 1)
+        self.tL.addWidget(self.vmz, 1, 10, 1 ,1)
+        self.tL.addWidget(self.lmaxz, 1, 11, 1 ,1)
+        self.tL.addWidget(self.vMz, 1, 12, 1 ,1)         
+
+        #self.tL.addWidget(self.valz, 2, 9, 1, 1,)         
+        #self.tL.addWidget(self.dlabz, 2, 10, 1, 1)
+
+
+        #self.tL.addWidget(self.valx,2, 1, 1 ,1)
+        #self.tL.addWidget(self.dlabx,2, 2, 1, 1)
+
+        #self.tL.addWidget(self.lminy, 1, 4, 1, 1)
+        #self.tL.addWidget(self.valy, 2, 5, 1, 1)
+        #self.tL.addWidget(self.dlaby, 2, 6, 1, 1)
+      
+        #self.tL.addWidget(self.lminz, 1, 8, 1, 1)
+        #self.tL.addWidget(self.valz, 2, 9, 1, 1,)         
+        #self.tL.addWidget(self.dlabz, 2, 10, 1, 1)
 
 
          
         self.vLW = QtGui.QWidget(self)
-        self.vLW.setGeometry(QtCore.QRect(0, 60, 801, 31))
+        self.vLW.setGeometry(QtCore.QRect(0, 90, 801, 31))
         self.vLW.setObjectName("vLW")
         self.vL = QtGui.QHBoxLayout(self.vLW)
         self.vL.setContentsMargins(5, 5, 5, 5)
@@ -85,7 +149,7 @@ class ModelWindow(QtGui.QWidget):
         
 
         self.vLW2 = QtGui.QWidget(self)
-        self.vLW2.setGeometry(QtCore.QRect(0, 90, 801, 511))
+        self.vLW2.setGeometry(QtCore.QRect(0, 120, 801, 511))
         self.vLW2.setObjectName("vLW2")
         self.vL2 = QtGui.QVBoxLayout(self.vLW2)
         self.vL2.setContentsMargins(5, 5, 5, 5)
@@ -115,9 +179,16 @@ class ModelWindow(QtGui.QWidget):
         self.surf = vv.meshRead(filename)
         self.Plot(self.surf)
         dimx,dimy,dimz = self.getBB()
-        self.valx.setText("{0:6.3f} - {1:6.3f}".format(dimx.min,dimx.max))        
-        self.valy.setText("{0:6.3f} - {1:6.3f}".format(dimy.min,dimy.max))
-        self.valz.setText("{0:6.3f} - {1:6.3f}".format(dimz.min,dimz.max))                 
+        self.vmx.setText("{0:6.3f}".format(dimx.min))
+        self.vmy.setText("{0:6.3f}".format(dimy.min))
+        self.vmz.setText("{0:6.3f}".format(dimz.min))
+        self.vMx.setText("{0:6.3f}".format(dimx.max))
+        self.vMy.setText("{0:6.3f}".format(dimy.max))
+        self.vMz.setText("{0:6.3f}".format(dimz.max))    
+        
+        #self.valx.setText("{0:6.3f} - {1:6.3f}".format(dimx.min,dimx.max))        
+        #self.valy.setText("{0:6.3f} - {1:6.3f}".format(dimy.min,dimy.max))
+        #self.valz.setText("{0:6.3f} - {1:6.3f}".format(dimz.min,dimz.max))                 
         
         
     def Plot(self,surf):
