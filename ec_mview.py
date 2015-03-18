@@ -1,4 +1,6 @@
 from PySide import QtGui, QtCore
+from modelview_ui import Ui_ModelWindow
+
 backend = 'pyside'
 import visvis as vv
 
@@ -7,210 +9,16 @@ import visvis as vv
 # This needs to be done *before* instantiating the main window. 
 plot = vv.use(backend)
 
-class ModelWindow(QtGui.QWidget):
-    def __init__(self, parent = None):
-        super(ModelWindow,self).__init__(parent)
-        #QtGui.QWidget.__init__(self, *args)
-        
-        #create the top zone holding the x,y,z
-
-        self.tW = QtGui.QWidget(self)
-        self.tW.setGeometry(QtCore.QRect(0, 0, 781, 116))
-        self.tW.setObjectName("tW")
-
-        # create a grid layout
-
-        self.tL = QtGui.QGridLayout(self.tW)
-        self.tL.setContentsMargins(5, 5, 5, 5)
-        self.tL.setObjectName("TL")
-        self.tL.setColumnMinimumWidth(4, 10)
-
-        self.desc =("Min.","Max.","Dim.")        
-        
-
-        self.labx = QtGui.QLabel(self.tW)
-        self.labx.setText('X')
-        self.labx.setAlignment(QtCore.Qt.AlignCenter|QtCore.Qt.AlignVCenter)        
-        self.laby = QtGui.QLabel(self.tW)
-        self.laby.setText('Y')
-        self.laby.setAlignment(QtCore.Qt.AlignCenter|QtCore.Qt.AlignVCenter)          
-        self.labz = QtGui.QLabel(self.tW)
-        self.labz.setText('Z')         
-        self.labz.setAlignment(QtCore.Qt.AlignCenter|QtCore.Qt.AlignVCenter)
-        
-        self.lminx = QtGui.QLabel(self.tW)
-        self.lminx.setText(self.desc[0])
-        self.lminy = QtGui.QLabel(self.tW)
-        self.lminy.setText(self.desc[0])          
-        self.lminz = QtGui.QLabel(self.tW)
-        self.lminz.setText(self.desc[0])         
-
-        
-        self.lmaxx = QtGui.QLabel(self.tW)
-        self.lmaxx.setText(self.desc[1])
-        self.lmaxy = QtGui.QLabel(self.tW)
-        self.lmaxy.setText(self.desc[1])          
-        self.lmaxz = QtGui.QLabel(self.tW)
-        self.lmaxz.setText(self.desc[1])          
-
-        self.ldimx = QtGui.QLabel(self.tW)
-        self.ldimx.setText(self.desc[2])
-        self.ldimx.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)        
-        self.ldimy = QtGui.QLabel(self.tW)
-        self.ldimy.setText(self.desc[2])
-        self.ldimy.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)           
-        self.ldimz = QtGui.QLabel(self.tW)
-        self.ldimz.setText(self.desc[2])
-        self.ldimz.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)         
-
-     
-        self.valx = QtGui.QLineEdit(self.tW)
-        self.valx.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
-        self.valy = QtGui.QLineEdit(self.tW)
-        self.valy.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
-        self.valz = QtGui.QLineEdit(self.tW)
-        self.valz.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
-
-        self.vmx = QtGui.QLineEdit(self.tW)
-        self.vmx.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
-        self.vmy = QtGui.QLineEdit(self.tW)
-        self.vmy.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
-        self.vmz = QtGui.QLineEdit(self.tW)
-        self.vmz.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
-
-        self.vMx = QtGui.QLineEdit(self.tW)
-        self.vMx.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
-        self.vMy = QtGui.QLineEdit(self.tW)
-        self.vMy.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
-        self.vMz = QtGui.QLineEdit(self.tW)
-        self.vMz.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
-
-        # create and places the units label 
-
-        self.labu = QtGui.QLabel(self.tW)
-        self.labu.setText('units = {0}'.format("mm"))
-
-        self.tL.addWidget(self.labu, 0, 0, 1, 3)
-
-
-        # create the lines defining the zone in the grid
-
-        self.line = QtGui.QFrame(self.tW)
-        self.line.setFrameShape(QtGui.QFrame.HLine)
-        self.line.setFrameShadow(QtGui.QFrame.Sunken)
-        self.line.setObjectName("line")
-        
-        self.line1 = QtGui.QFrame(self.tW)
-        self.line1.setFrameShape(QtGui.QFrame.VLine)
-        self.line1.setFrameShadow(QtGui.QFrame.Sunken)
-        self.line1.setObjectName("line1")       
-
-        self.line2 = QtGui.QFrame(self.tW)
-        self.line2.setFrameShape(QtGui.QFrame.VLine)
-        self.line2.setFrameShadow(QtGui.QFrame.Sunken)
-        self.line2.setObjectName("line2")
-
-        # place the lines in the grid
-
-        self.tL.addWidget(self.line, 1, 0, 1, 15)
-        self.tL.addWidget(self.line1, 1, 5, 4, 1)
-        self.tL.addWidget(self.line2, 1, 10, 4, 1)       
-
-        # place the content of the grid 
-
-        # X values
-        
-        self.tL.addWidget(self.labx, 2, 1, 1, 4)
-
-        self.tL.addWidget(self.lminx, 3, 1, 1, 1)
-        self.tL.addWidget(self.vmx, 3, 2, 1, 1)        
-        self.tL.addWidget(self.lmaxx, 3, 3, 1, 1)        
-        self.tL.addWidget(self.vMx, 3, 4, 1, 1) 
-        self.tL.addWidget(self.ldimx, 4, 2, 1, 1)
-        self.tL.addWidget(self.valx, 4, 3, 1 ,2)
-
-        # Y values
-    
-        self.tL.addWidget(self.laby, 2, 6, 1, 4)
-
-        self.tL.addWidget(self.lminy,3, 6, 1, 1)
-        self.tL.addWidget(self.vmy, 3, 7, 1, 1)
-        self.tL.addWidget(self.lmaxy, 3, 8, 1 ,1)
-        self.tL.addWidget(self.vMy, 3, 9, 1, 1)
-        self.tL.addWidget(self.ldimy, 4, 7, 1, 1)          
-        self.tL.addWidget(self.valy, 4, 8, 1, 2)
-
-      
-        # Z values
-      
-        self.tL.addWidget(self.labz, 2, 11, 1, 4)
-        
-        self.tL.addWidget(self.lminz, 3, 11, 1, 1)
-        self.tL.addWidget(self.vmz, 3, 12, 1, 1)
-        self.tL.addWidget(self.lmaxz, 3, 13, 1 ,1)
-        self.tL.addWidget(self.vMz, 3, 14, 1, 1)
-        self.tL.addWidget(self.ldimz, 4, 12, 1, 1)         
-        self.tL.addWidget(self.valz, 4, 13, 1, 2)         
-
-
-        # create the central zone with buttons
-         
-        self.vLW = QtGui.QWidget(self)
-        self.vLW.setGeometry(QtCore.QRect(0, 116, 781, 31))
-        self.vLW.setObjectName("vLW")
-        self.vL = QtGui.QHBoxLayout(self.vLW)
-        self.vL.setContentsMargins(5, 5, 5, 5)
-        self.vL.setObjectName("vL")
-       
-
-        self.but1 = QtGui.QPushButton(self.vLW)
-        self.but1.setText('X')  
-        self.but2 = QtGui.QPushButton(self.vLW)
-        self.but2.setText('Y')
-        self.but3 = QtGui.QPushButton(self.vLW)
-        self.but3.setText('Z')
-        self.but4 = QtGui.QPushButton(self.vLW)
-        self.but4.setText('Ortho')                      
-        self.but5 = QtGui.QPushButton(self.vLW)
-        self.but5.setText('Show')           
-        self.but6 = QtGui.QPushButton(self.vLW)
-        self.but6.setText(' X +')           
-        self.but7 = QtGui.QPushButton(self.vLW)
-        self.but7.setText(' X -')           
-        self.but8 = QtGui.QPushButton(self.vLW)
-        self.but8.setText(' Y +')           
-        self.but9 = QtGui.QPushButton(self.vLW)
-        self.but9.setText(' Y -')           
-        self.but10 = QtGui.QPushButton(self.vLW)
-        self.but10.setText(' Z +')           
-        self.but11 = QtGui.QPushButton(self.vLW)
-        self.but11.setText(' Z -')           
-        
-        self.vL.addWidget(self.but1)
-        self.vL.addWidget(self.but2) 
-        self.vL.addWidget(self.but3)
-        self.vL.addWidget(self.but4)
-        self.vL.addWidget(self.but5)
-        self.vL.addWidget(self.but6)
-        self.vL.addWidget(self.but7)        
-        self.vL.addWidget(self.but8)
-        self.vL.addWidget(self.but9)
-        self.vL.addWidget(self.but10)
-        self.vL.addWidget(self.but11)
-        
-        # create the bottom zone with the graphic window
-
-        self.vLW2 = QtGui.QWidget(self)
-        self.vLW2.setGeometry(QtCore.QRect(0, 150, 781, 491))
-        self.vLW2.setObjectName("vLW2")
-        self.vL2 = QtGui.QVBoxLayout(self.vLW2)
-        self.vL2.setContentsMargins(5, 5, 5, 5)
-        self.vL2.setObjectName("vL2")
-
+class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
+        # maybe a spash screen goes here?
+    def __init__(self, parent=None):
+        super(ModelWindow, self).__init__(parent)
+        self.setupUi(self)        
+ 
         self.Figure = plot.GetFigureClass()
         self.fig = self.Figure(self.vLW2)
         self.vL2.addWidget(self.fig._widget)
-        
+
         #set the actions of the window
 
         self.but1.pressed.connect(self.camX)
@@ -224,25 +32,31 @@ class ModelWindow(QtGui.QWidget):
         self.but9.pressed.connect(self.decY)
         self.but10.pressed.connect(self.incZ)
         self.but11.pressed.connect(self.decZ)
+
+        self.but12.pressed.connect(self.triX)
+        self.but13.pressed.connect(self.trdX)
+        self.but14.pressed.connect(self.triY)
+        self.but15.pressed.connect(self.trdY)
+        self.but16.pressed.connect(self.triZ)
+        self.but17.pressed.connect(self.trdZ)
+
+        self.msg01 = '<span style="color:red">{0:6.3f}</span>'
+        self.msg02 = '<span style="color:green">{0:6.3f}</span>'
+        self.msg03 = '<span style="color:blue">{0:6.3f}</span>'
         
-        # Show window
-
-        self.resize(780, 600)
-        self.setWindowTitle('EuroCAM - Model View')
-        self.show()
-
-
+        self.show()       
+        
  
     def load_data(self,filename): 
         self.surf = vv.meshRead(filename)
         self.Plot(self.surf)
         dimx,dimy,dimz = self.getBB(self.t)
-        self.vmx.setText("{0:6.3f}".format(dimx.min))
-        self.vmy.setText("{0:6.3f}".format(dimy.min))
-        self.vmz.setText("{0:6.3f}".format(dimz.min))
-        self.vMx.setText("{0:6.3f}".format(dimx.max))
-        self.vMy.setText("{0:6.3f}".format(dimy.max))
-        self.vMz.setText("{0:6.3f}".format(dimz.max))    
+        self.vmx.setText(self.msg01.format(dimx.min))
+        self.vmy.setText(self.msg02.format(dimy.min))
+        self.vmz.setText(self.msg03.format(dimz.min))
+        self.vMx.setText(self.msg01.format(dimx.max))
+        self.vMy.setText(self.msg02.format(dimy.max))
+        self.vMz.setText(self.msg03.format(dimz.max))    
         
         xdim = dimx.max - dimx.min        
         ydim = dimy.max - dimy.min
@@ -252,9 +66,9 @@ class ModelWindow(QtGui.QWidget):
         
         #self.wp((dimx,dimy,dimz))
         
-        self.valx.setText("{0:6.3f}".format(xdim))        
-        self.valy.setText("{0:6.3f}".format(ydim))
-        self.valz.setText("{0:6.3f}".format(zdim))                 
+        self.valx.setText(self.msg01.format(xdim))        
+        self.valy.setText(self.msg02.format(ydim))
+        self.valz.setText(self.msg03.format(zdim))                 
         
 #    def set_wp(self):
         self.wpxmin = dimx.min         
@@ -273,7 +87,7 @@ class ModelWindow(QtGui.QWidget):
         self.wpy = self.wpymax - self.wpymin        
         self.wpz = self.wpzmax - self.wpzmin
         
-        self.draw_wp(self.cube((0,0,0)))
+        self.draw_wp(self.cube((0,0,0),(self.wpox,self.wpoy,self.wpoz)))
 
     def draw_wp(self,pp):
         self.wp = vv.Line(self.a,pp)
@@ -361,60 +175,78 @@ class ModelWindow(QtGui.QWidget):
         self.a.camera.roll = 0.0            
 
  
-    def cube(self,dims):
+    def cube(self,dims,offs):
         pp = vv.Pointset(3)
-        pp.append(0,0,0)
-        pp.append(dims[0],0,0)
-        pp.append(dims[0],dims[1],0)
-        pp.append(0,dims[1],0)
-        pp.append(0,0,0) 
-        pp.append(0,0,dims[2])
-        pp.append(dims[0],0,dims[2])
-        pp.append(dims[0],dims[1],dims[2])
-        pp.append(0,dims[1],dims[2])
-        pp.append(0,0,dims[2])        
+        pp.append(offs[0], offs[1], offs[2])
+        pp.append(offs[0] + dims[0],offs[1],offs[2])
+        pp.append(offs[0] + dims[0],offs[1] + dims[1],offs[2])
+        pp.append(offs[0], offs[1] + dims[1],offs[2])
+        pp.append(offs[0], offs[1], offs[2]) 
+        pp.append(offs[0], offs[1], offs[2] + dims[2])
+        pp.append(offs[0] + dims[0], offs[1], offs[2] + dims[2])
+        pp.append(offs[0] + dims[0], offs[1] + dims[1], offs[2] + dims[2])
+        pp.append(offs[0], offs[1] + dims[1], offs[2] + dims[2])
+        pp.append(offs[0], offs[1], offs[2] + dims[2])        
 
         return pp
-        
+
+
+    def redraw_cube(self):
+        pp = self.cube((self.wpx, self.wpy, self.wpz),
+                       (self.wpox, self.wpoy,self.wpoz))
+        self.wp.visible = False
+        self.draw_wp(pp)        
+
      
     def incX(self):
         self.wpx = self.wpx + 5
-        pp = self.cube((self.wpx,self.wpy,self.wpz))
-        self.wp.visible = False
-        self.draw_wp(pp)
-
+        self.redraw_cube()
         
     def decX(self):
         self.wpx = self.wpx - 5
-        pp = self.cube((self.wpx,self.wpy,self.wpz))
-        self.wp.visible = False        
-        self.draw_wp(pp)    
+        self.redraw_cube()        
+
 
     def incY(self):
         self.wpy = self.wpy + 5
-        pp = self.cube((self.wpx,self.wpy,self.wpz))
-        self.wp.visible = False
-        self.draw_wp(pp)
+        self.redraw_cube()
 
         
     def decY(self):
         self.wpy = self.wpy - 5
-        pp = self.cube((self.wpx,self.wpy,self.wpz))
-        self.wp.visible = False        
-        self.draw_wp(pp)    
-
+        self.redraw_cube()
+        
     def incZ(self):
         self.wpz = self.wpz + 5
-        pp = self.cube((self.wpx,self.wpy,self.wpz))
-        self.wp.visible = False
-        self.draw_wp(pp)
-
+        self.redraw_cube()        
         
     def decZ(self):
         self.wpz = self.wpz - 5
-        pp = self.cube((self.wpx,self.wpy,self.wpz))
-        self.wp.visible = False        
-        self.draw_wp(pp)    
+        self.redraw_cube()
+        
+    def triX(self):
+        self.wpox = self.wpox + 5
+        self.redraw_cube()
+        
+    def trdX(self):
+        self.wpox = self.wpox - 5
+        self.redraw_cube()        
+
+    def triY(self):
+        self.wpoy = self.wpoy + 5
+        self.redraw_cube()
+        
+    def trdY(self):
+        self.wpoy = self.wpoy - 5
+        self.redraw_cube()
+        
+    def triZ(self):
+        self.wpoz = self.wpoz + 5
+        self.redraw_cube()        
+        
+    def trdZ(self):
+        self.wpoz = self.wpoz - 5
+        self.redraw_cube()        
 
 
 if __name__ == "__main__":
