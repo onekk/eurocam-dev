@@ -81,6 +81,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.PCSBSdc.valueChanged.connect(self.pc_SB_uV)    
         #self.PCSBOvl.valueChanged.connect(self.pc_Ovl_uV)    
         
+        self.md = None # create a viìoid reference for the model
+                       # display window otherwise it will be destroyed
+    
         self.connect(self.MainTab,QtCore.SIGNAL('currentChanged(int)'),self.MainTabchosen)        
 
 
@@ -244,14 +247,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         EC_UA.initGV(self)
         if self.MainTab.currentIndex() == 2:
             EC_UA.toolPaint(self)            
-
-        #self.PLOT = QWidget()  
-        #self.RightTB.addItem(self.PLOT, "Vis Vis")        
-        # Make figure using "self" as a parent
-        #Figure = plot.GetFigureClass()
-        #self.fig = Figure(self.PLOT)
-        #Figure._SetPosition(self.fig,0,0,350,350)
-       
+     
 
     def create_inifile(self,path):
         msgtxt = self.msg_14m.format(path)
@@ -352,11 +348,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.IL_2.setText("Basename Set")
         self.IL_2.setToolTip("Basename = <b>{0}</b>".format(glb.basename))        
         self.MdTName.setText("<b>{0}</b>".format(filename))
-        self.surf = vv.meshRead(filename)
-        md = ECM.ModelWindow()
-        md.Plot(self.surf)
-        dimx,dimy,dimz = md.getBB()
-        print dimx, dimy, dimz
+        self.md = ECM.ModelWindow()
+        self.md.load_data(filename)
+        dimx,dimy,dimz = self.md.getBB("md")
+        #print dimx, dimy, dimz
         self.MdTmX.setText("{0:6.3f}".format(dimx.min))        
         self.MdTmY.setText("{0:6.3f}".format(dimy.min))
         self.MdTmZ.setText("{0:6.3f}".format(dimz.min))         
