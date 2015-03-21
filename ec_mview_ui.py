@@ -16,7 +16,7 @@ class Ui_ModelWindow(object):
         #create the top zone holding the x,y,z
 
         self.tW = QtGui.QWidget(self)
-        self.tW.setGeometry(QtCore.QRect(0, 0, 781, 111))
+        self.tW.setGeometry(QtCore.QRect(0, 0, 781, 101))
         self.tW.setObjectName("tW")
 
         # create a grid layout
@@ -24,10 +24,39 @@ class Ui_ModelWindow(object):
         self.tL = QtGui.QGridLayout(self.tW)
         self.tL.setContentsMargins(2,2,2,2)
         self.tL.setObjectName("TL")
-        self.tL.setColumnMinimumWidth(3, 8)
+        self.tL.setColumnMinimumWidth(0, 0)
+        self.tL.setVerticalSpacing(3)
+        self.tL.setHorizontalSpacing(3)
+
+        # create the central zone with buttons
+        
+        self.vLW = QtGui.QWidget(self)
+        self.vLW.setGeometry(QtCore.QRect(0, 100, 781, 91))
+        self.vLW.setObjectName("vLW")
+        self.vL = QtGui.QGridLayout(self.vLW)
+        self.vL.setContentsMargins(5, 5, 5, 5)
+        self.vL.setObjectName("vL")
+        self.vL.setVerticalSpacing(2)
+        self.vL.setHorizontalSpacing(2)
+       
+        # create the bottom zone with the graphic window
+
+        self.vLW2 = QtGui.QWidget(self)
+        self.vLW2.setGeometry(QtCore.QRect(0, 190, 781, 391))
+        self.vLW2.setObjectName("vLW2")
+        self.vL2 = QtGui.QVBoxLayout(self.vLW2)
+        self.vL2.setContentsMargins(0, 0, 0, 0)
+        self.vL2.setObjectName("vL2")
+
 
         font = QtGui.QFont()
         font.setPointSize(9)          
+
+        ###################
+        #                 #
+        # Populate the tW #
+        #                 #
+        ###################
 
         self.labx = QtGui.QLabel(self.tW)
         self.laby = QtGui.QLabel(self.tW)
@@ -41,8 +70,9 @@ class Ui_ModelWindow(object):
         self.lmax = QtGui.QLabel(self.tW)        
         self.ldim = QtGui.QLabel(self.tW)
         self.loff = QtGui.QLabel(self.tW)
-        
-        for obj in (self.lmin, self.lmax, self.ldim):
+ 
+
+        for obj in (self.lmin, self.lmax, self.ldim, self.loff):
             obj.setFont(font)            
 
 
@@ -56,7 +86,8 @@ class Ui_ModelWindow(object):
         self.lmax.setText('Max')
         self.ldim.setText('Dim')        
         self.loff.setText('Offset')    
-             
+
+                 
     
         self.valx = QtGui.QLabel(self.tW)
         self.valy = QtGui.QLabel(self.tW)
@@ -93,22 +124,17 @@ class Ui_ModelWindow(object):
                     self.vwpx, self.vwpy, self.vwpz,
                     self.vwpmx, self.vwpmy, self.vwpmz,
                     self.vwpMx, self.vwpMy, self.vwpMz,
-                    self.vwpox, self.vwpoy, self.vwpoz,):
+                    self.vwpox, self.vwpoy, self.vwpoz):
                         
             obj.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
             obj.setFont(font)
         
-        # create and places the units label 
-
         # create the lines defining the zone in the grid
 
         self.line1 = QtGui.QFrame(self.tW)
         self.line1.setFrameShape(QtGui.QFrame.HLine)
         self.line1.setObjectName("line1")
         
-        #self.line2 = QtGui.QFrame(self.tW)
-        #self.line2.setFrameShape(QtGui.QFrame.HLine)
-        #self.line2.setObjectName("line2")        
         
         self.sep1 = QtGui.QFrame(self.tW)
         self.sep2 = QtGui.QFrame(self.tW)
@@ -121,13 +147,10 @@ class Ui_ModelWindow(object):
         for obj in (self.sep1, self.sep2, self.sep3, self.sep4, self.sep5,
                     self.sep6,self.sep7):
             obj.setFrameShape(QtGui.QFrame.VLine)
-            #obj.setObjectName("sep3")
 
         for obj in (self.line1, self.sep1, self.sep2,
                     self.sep3, self.sep4, self.sep5, self.sep6, self.sep7): 
-                    # + self.line2,
             obj.setFrameShadow(QtGui.QFrame.Sunken)
-
 
 
         # place the lines in the grid
@@ -199,6 +222,7 @@ class Ui_ModelWindow(object):
         self.tL.addWidget(self.vwpz, 5, 13, 1, 1)         
         self.tL.addWidget(self.vwpoz, 6, 13, 1, 1) 
         
+
         #Create the visuals buttons 
 
         self.but1 = QtGui.QPushButton(self.tW)
@@ -230,27 +254,40 @@ class Ui_ModelWindow(object):
         self.tL.addWidget(self.but4, 6, 15, 1, 1)
         self.tL.addWidget(self.but5, 6, 16, 1, 1)
         
-        # create the central zone with buttons
+        ####################
+        #                  #
+        # Populate the vLW #
+        #                  #
+        ####################
+        
+        self.lwinc = QtGui.QLabel(self.vLW)        
+        self.lwoff = QtGui.QLabel(self.vLW)
+        self.lvinc = QtGui.QLabel(self.vLW)
+        self.lvinc.setFont(font)
+        self.lvinc.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+        
+        for obj in (self.lwinc,self.lwoff):
+            obj.setAlignment(QtCore.Qt.AlignCenter|QtCore.Qt.AlignVCenter)
+            obj.setFont(font)
+            
+        self.lwinc.setText('Workpiece Dimensions')        
+        self.lwoff.setText('Workpiece Offset')
 
-         
-        self.vLW = QtGui.QWidget(self)
-        self.vLW.setGeometry(QtCore.QRect(0, 110, 781, 81))
-        self.vLW.setObjectName("vLW")
-        self.vL = QtGui.QGridLayout(self.vLW)
-        self.vL.setContentsMargins(5, 5, 5, 5)
-        self.vL.setObjectName("vL")
-       
-
+            
         self.line4 = QtGui.QFrame(self.vLW)
         self.line4.setFrameShape(QtGui.QFrame.HLine)
         self.line4.setFrameShadow(QtGui.QFrame.Sunken)
-        self.line4.setObjectName("line3")
+        self.line4.setObjectName("line4")
         
         self.line5 = QtGui.QFrame(self.vLW)
         self.line5.setFrameShape(QtGui.QFrame.VLine)
         self.line5.setFrameShadow(QtGui.QFrame.Sunken)
-        self.line5.setObjectName("line4")       
+        self.line5.setObjectName("line5")       
 
+        self.line6 = QtGui.QFrame(self.vLW)
+        self.line6.setFrameShape(QtGui.QFrame.VLine)
+        self.line6.setFrameShadow(QtGui.QFrame.Sunken)
+        self.line6.setObjectName("line6")       
 
         # WP dimension
         self.but6 = QtGui.QPushButton(self.vLW)
@@ -288,6 +325,21 @@ class Ui_ModelWindow(object):
         self.butz0 = QtGui.QPushButton(self.tW)
         self.butz0.setText('Zoom 0')
 
+        self.butincn = QtGui.QPushButton(self.tW)
+        self.butincn.setText('Inc R')  
+        self.butincf = QtGui.QPushButton(self.tW)
+        self.butincf.setText('Inc +')
+        self.butincs = QtGui.QPushButton(self.tW)
+        self.butincs.setText('Inc -')
+
+        #TODO aggiungere botton per resettare le dimensioni e 
+        # modificare il funzionamento di offset0
+
+        for obj in (self.butzi, self.butzd, self.butz0, self.butincn, 
+                    self.butincf, self.butincs ):
+            obj.setFont(font)
+
+
         for obj in (self.but6, self.but7, self.but12, self.but13):
             obj.setStyleSheet("color: red")
             obj.setFont(font)
@@ -300,40 +352,47 @@ class Ui_ModelWindow(object):
             obj.setStyleSheet("color: blue")            
             obj.setFont(font)
             
-        self.vL.addWidget(self.line4, 0 , 0 , 1, 12)
-        self.vL.addWidget(self.line5, 0 , 5 , 4, 1)
+        self.vL.addWidget(self.line4, 0 , 0 , 1, 14)
+        self.vL.addWidget(self.line5, 0 , 6 , 5, 1)
+        self.vL.addWidget(self.line6, 0 , 8 , 5, 1)
+
+        # add the labels and the offset value
+
+        self.vL.addWidget(self.lwinc, 1, 9, 1, 3)
+        self.vL.addWidget(self.lwoff, 1, 2, 1, 3)
+        self.vL.addWidget(self.lvinc, 1, 7, 1, 1)
+
 
         # add the zoom buttons 
 
-        self.vL.addWidget(self.butzi, 1, 13, 1, 1)
-        self.vL.addWidget(self.butz0, 2, 13, 1, 1)        
-        self.vL.addWidget(self.butzd, 3, 13, 1, 1)         
+        self.vL.addWidget(self.butzi, 2, 14, 1, 1)
+        self.vL.addWidget(self.butz0, 3, 14, 1, 1)        
+        self.vL.addWidget(self.butzd, 4, 14, 1, 1)         
+
+        # add the increment buttons
+
+        self.vL.addWidget(self.butincn, 3, 7, 1, 1)
+        self.vL.addWidget(self.butincf, 2, 7, 1, 1)        
+        self.vL.addWidget(self.butincs, 4, 7, 1, 1)         
+
         
         #add WP translation buttons
-        self.vL.addWidget(self.but12, 2, 3, 1, 1)
-        self.vL.addWidget(self.but13, 2, 1, 1, 1)        
-        self.vL.addWidget(self.but14, 1, 2, 1, 1)
-        self.vL.addWidget(self.but15, 3, 2, 1, 1)
-        self.vL.addWidget(self.but16, 1, 4, 1, 1)
-        self.vL.addWidget(self.but17, 3, 4, 1, 1)
-        self.vL.addWidget(self.but18, 2, 2, 1, 1)
+        self.vL.addWidget(self.but12, 3, 4, 1, 1)
+        self.vL.addWidget(self.but13, 3, 2, 1, 1)        
+        self.vL.addWidget(self.but14, 2, 3, 1, 1)
+        self.vL.addWidget(self.but15, 4, 3, 1, 1)
+        self.vL.addWidget(self.but16, 2, 5, 1, 1)
+        self.vL.addWidget(self.but17, 4, 5, 1, 1)
+        self.vL.addWidget(self.but18, 3, 3, 1, 1)
         
         # Add WP dimension buttons        
-        self.vL.addWidget(self.but6, 2, 9, 1, 1)
-        self.vL.addWidget(self.but7, 2, 7, 1, 1)        
-        self.vL.addWidget(self.but8, 1, 8, 1, 1)
-        self.vL.addWidget(self.but9, 3, 8, 1, 1)
-        self.vL.addWidget(self.but10, 1, 11, 1, 1)
-        self.vL.addWidget(self.but11, 3, 11, 1, 1)
+        self.vL.addWidget(self.but6, 3, 11, 1, 1)
+        self.vL.addWidget(self.but7, 3, 9, 1, 1)        
+        self.vL.addWidget(self.but8, 2, 10, 1, 1)
+        self.vL.addWidget(self.but9, 4, 10, 1, 1)
+        self.vL.addWidget(self.but10, 2, 12, 1, 1)
+        self.vL.addWidget(self.but11, 4, 12, 1, 1)
 
-        
-        # create the bottom zone with the graphic window
 
-        self.vLW2 = QtGui.QWidget(self)
-        self.vLW2.setGeometry(QtCore.QRect(0, 190, 781, 381))
-        self.vLW2.setObjectName("vLW2")
-        self.vL2 = QtGui.QVBoxLayout(self.vLW2)
-        self.vL2.setContentsMargins(0, 0, 0, 0)
-        self.vL2.setObjectName("vL2")
         
         QtCore.QMetaObject.connectSlotsByName(ModelWindow)

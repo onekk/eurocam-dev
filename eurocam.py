@@ -307,9 +307,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def MainTabchosen(self,value):
         if value == 2:
             EC_UA.toolPaint(self)
+        elif value == 3:
+            text = self.WPCB.currentText()
+            self.change_wp(text)
         else:
             print "Tab number = ",value
             EC_UA.clearGV(self)
+
        
     def About_EuroCAM(self):
         QMessageBox.about(self,self.msg_02t,self.msg_02m) 
@@ -351,13 +355,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.md = ECM.ModelWindow()
         self.md.load_data(filename)
         dimx,dimy,dimz = self.md.getBB("md")
-        #print dimx, dimy, dimz
         self.MdTmX.setText("{0:6.3f}".format(dimx.min))        
         self.MdTmY.setText("{0:6.3f}".format(dimy.min))
         self.MdTmZ.setText("{0:6.3f}".format(dimz.min))         
         self.MdTMX.setText("{0:6.3f}".format(dimx.max))        
         self.MdTMY.setText("{0:6.3f}".format(dimy.max))
         self.MdTMZ.setText("{0:6.3f}".format(dimz.max))
+
+
+    def change_wp(self,value):
+        EC_UA.writeWPdata(self,value)
+        print glb.wpdata
+        if glb.M_Load == True:
+            self.wp_plot()        
+
+    def wp_plot(self):
+        xmin = float(glb.wpdata[0])
+        xmax = float(glb.wpdata[1])
+        ymin = float(glb.wpdata[2])
+        ymax = float(glb.wpdata[3])
+        zmin = float(glb.wpdata[4])
+        zmax = float(glb.wpdata[5])
+        if int(glb.unit) == 0 :
+            dunit = "mm"
+        else:
+            dunit = "inch"
+        self.md.wp_create(xmin, xmax, ymin, ymax, zmin, zmax, dunit)        
 
         
     def askBasename(self):
@@ -385,6 +408,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if ret == QMessageBox.Yes:
             self.Log.append("Writing Settings") 
             self.writeSettings()
+            self.md.close()
             event.accept()
         elif ret == QMessageBox.Cancel:
             event.ignore()
@@ -739,9 +763,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     #                                              #
     ################################################
 
-    def wp_chosen(self, text):
-        print "wpc chosen  = ",text
-        EC_UA.writeWPdata(self,self.WPCB.currentText())
+    def wp_chosen(self, value):
+        self.PCWPCB.setCurrentIndex(self.WPCB.currentIndex())
+        self.change_wp(value)        
+
 
     def wpNew(self):
         ans = self.askMoTname(glb.WorkPCs,glb.wp_sin)
@@ -857,7 +882,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def pc_wp_chosen(self,value):
-        glb.wpdata = glb.WorkPCs[value]
+        self.WPCB.setCurrentIndex(self.PCWPCB.currentIndex())        
+        self.change_wp(value)        
         # TODO insert the correction for feed and step based on material
         # properties?
         #self.pc_feed_data() 
@@ -887,13 +913,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.PCPBCt.setVisible(False)
         self.PCPBGenG.setVisible(False)
         #self.pc_coll_data()
-        # Run the data check and the preliminary calculations        
+        # Run the data check and the preliminary calculations
         ret = self.pc_calc_data()
+        
         if ret == "KO":
+            # or do something
             pass
         else:
-            pass 
-            # do something
+            pass
+            # or do something
         
     def pc_step_data(self):
         diameter = float(glb.t_data[1]) 
@@ -918,7 +946,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # TODO consider the material data
         m_name = self.PCMachCB.currentText()             
         t_name = self.PCToolCB.currentText()
+        #retrieve the wp coordinates from the display window
+        data = self.md.get_wp_dim()
+        print data
+
+        return # FIXME provvisorio        
+                
         wp_h = float(glb.wpdata[5])-float(glb.wpdata[4])  # height = zmax-zmin     
+
         feedrate = self.PCSBXYfc.value()
         plungerate = self.PCSBZfc.value()
         zpc = self.PCSBZsd.value()

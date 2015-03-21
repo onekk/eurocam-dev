@@ -49,19 +49,25 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         self.butzd.pressed.connect(self.zoomdec)
         self.butz0.pressed.connect(self.zoomreset)
 
-
+        self.butincn.pressed.connect(self.incN)
+        self.butincf.pressed.connect(self.incF)
+        self.butincs.pressed.connect(self.incS)
+        
         self.msg01 = '<span style="color:red">{0:6.3f}</span>'
         self.msg02 = '<span style="color:green">{0:6.3f}</span>'
         self.msg03 = '<span style="color:blue">{0:6.3f}</span>'
 
         self.dspunit = ""        
 
-        self.inc = 0.1
+        self.iscale = []
+        self.incr = 0.5
+        self.inc = 0
         self.zoom = 0.0
         self.zinc = 0.0
         self.dzoom = 0.0
-
-        
+        self.wpvisible = False
+        self.dunit = "mm"
+        self.wporig = ()
         self.show()       
         
  
@@ -72,13 +78,10 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         self.xdim = dimx.max - dimx.min        
         self.ydim = dimy.max - dimy.min
         self.zdim = dimz.max - dimz.min        
-        self.incr = min((self.xdim, self.ydim, self.zdim))/10.0
-        print self.incr # define a bse increment
         self.zoom = self.a.camera.zoom
         self.zinc = self.zoom/10.0
         self.dzoom = self.zoom        
-        self.dspunit = 'units = {0}'.format("mm")
-        #vv.title(self.dspunit)        
+        self.dspunit = 'units = {0}'.format(self.dunit)
         self.show_md_dim(dimx,dimy,dimz)
         return dimx,dimy,dimz
 
@@ -95,7 +98,7 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         xdim = dimx.max - dimx.min        
         ydim = dimy.max - dimy.min
         zdim = dimz.max - dimz.min
-        
+
         self.valx.setText(self.msg01.format(xdim))        
         self.valy.setText(self.msg02.format(ydim))
         self.valz.setText(self.msg03.format(zdim))         
@@ -108,56 +111,85 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         self.wpymax = ymax 
         self.wpzmin = zmin         
         self.wpzmax = zmax
-        
         # set the offset of the workpiece 
         self.wpox = 0
         self.wpoy = 0
         self.wpoz = 0        
-
-        self.wpx = self.wpxmax - self.wpxmin
-        self.wpy = self.wpymax - self.wpymin        
-        self.wpz = self.wpzmax - self.wpzmin
         
-        self.draw_wp(self.cube((self.wpx, self.wpy, self.wpz), 
-                               (self.wpox, self.wpoy, self.wpoz)))
+        self.wporig = (xmin, xmax, ymin, ymax, zmin, zmax)        
+        
+        self.calc_increment()           
+        
+        if self.wpvisible ==  True:
+            self.wp.visible = False
+            self.redraw_cube()            
+        else:
+            pp = self.cube((xmin,xmax,ymin,ymax,zmin,zmax))        
+            self.draw_wp(pp)        
+            self.show_wp_dim()
+            
+                               
 
     def draw_wp(self,pp):
         self.wp = vv.Line(self.a,pp)
         self.wp.lw = 2
         self.wp.lc = (0.8,0.5,0.2)
+        self.wp.ls = "+"
         self.wp.visible = True
+        self.wpvisible = True
 
-    def cube(self,dims,offs):
+    def cube(self,dims):
         pp = vv.Pointset(3)
-        pp.append(offs[0], offs[1], offs[2])
-        pp.append(offs[0] + dims[0],offs[1],offs[2])
-        pp.append(offs[0] + dims[0],offs[1] + dims[1],offs[2])
-        pp.append(offs[0], offs[1] + dims[1],offs[2])
-        pp.append(offs[0], offs[1], offs[2]) 
-        pp.append(offs[0], offs[1], offs[2] + dims[2])
-        pp.append(offs[0] + dims[0], offs[1], offs[2] + dims[2])
-        pp.append(offs[0] + dims[0], offs[1] + dims[1], offs[2] + dims[2])
-        pp.append(offs[0], offs[1] + dims[1], offs[2] + dims[2])
-        pp.append(offs[0], offs[1], offs[2] + dims[2])        
-
+        pp.append(dims[0], dims[2], dims[4]) # A
+        pp.append(dims[1], dims[2], dims[4]) # B
+        pp.append(dims[1], dims[2], dims[4]) # B        
+        pp.append(dims[1], dims[2], dims[5]) # C
+        pp.append(dims[1], dims[2], dims[5]) # C        
+        pp.append(dims[0], dims[2], dims[5]) # D
+        pp.append(dims[0], dims[2], dims[5]) # D        
+        pp.append(dims[0], dims[3], dims[5]) # E
+        pp.append(dims[0], dims[3], dims[5]) # E        
+        pp.append(dims[1], dims[3], dims[5]) # F
+        pp.append(dims[1], dims[3], dims[5]) # F        
+        pp.append(dims[1], dims[3], dims[4]) # G
+        pp.append(dims[1], dims[3], dims[4]) # G        
+        pp.append(dims[0], dims[3], dims[4]) # H
+        pp.append(dims[0], dims[3], dims[4]) # H        
+        pp.append(dims[0], dims[2], dims[4]) # A
+        pp.append(dims[0], dims[2], dims[4]) # A
+        pp.append(dims[0], dims[2], dims[5]) # D
+        pp.append(dims[0], dims[3], dims[5]) # E
+        pp.append(dims[0], dims[3], dims[4]) # H        
+        pp.append(dims[1], dims[2], dims[5]) # C
+        pp.append(dims[1], dims[3], dims[5]) # F
+        pp.append(dims[1], dims[2], dims[4]) # B
+        pp.append(dims[1], dims[3], dims[4]) # G               
         return pp
 
     def redraw_cube(self):
-        pp = self.cube((self.wpx, self.wpy, self.wpz),
-                       (self.wpox, self.wpoy,self.wpoz))
+        pp = self.cube((self.wpxmin, self.wpxmax, self.wpymin,
+                       self.wpymax, self.wpzmin, self.wpzmax))
         self.wp.visible = False
+        self.wpvisible = False
         self.draw_wp(pp)        
         self.show_wp_dim()
 
+    def get_wp_dim(self):
+        return (self.wpxmin, self.wpxmax, self.wpymin, self.wpymax, 
+                self.wpzmin,self.wpzmax, self.dunit) 
+
+
     def show_wp_dim(self):
-        
-        
         self.vwpmx.setText(self.msg01.format(self.wpxmin))
         self.vwpmy.setText(self.msg02.format(self.wpymin))
         self.vwpmz.setText(self.msg03.format(self.wpzmin))
         self.vwpMx.setText(self.msg01.format(self.wpxmax))
         self.vwpMy.setText(self.msg02.format(self.wpymax))
         self.vwpMz.setText(self.msg03.format(self.wpzmax))
+
+        self.wpx = self.wpxmax - self.wpxmin
+        self.wpy = self.wpymax - self.wpymin        
+        self.wpz = self.wpzmax - self.wpzmin
 
         self.vwpx.setText(self.msg01.format(self.wpx))
         self.vwpy.setText(self.msg02.format(self.wpy))
@@ -166,6 +198,7 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         self.vwpox.setText(self.msg01.format(self.wpox))
         self.vwpoy.setText(self.msg02.format(self.wpoy))
         self.vwpoz.setText(self.msg03.format(self.wpoz))
+        self.lvinc.setText("incr = {0}".format(self.incr))
        
     def Plot(self,surf):
         
@@ -222,6 +255,37 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         print "Zoom = {0}".format(self.zoom) 
         #print self.a.axis.lw
         #self.surf.Transform_Scale(sx=1.5, sy=1.5, sz=1.5)
+
+
+    def calc_increment(self):
+        ''''
+        
+        define a base increment using the unit of the model
+        
+        '''
+        if self.dunit == "mm":
+            self.iscale = [0.01,0.05,0.1,0.5,1,2,5,10,25,50]
+        elif self.dunit == "in":
+            self.iscale = [0.005,0.01,0.05,0.1,0.5,1,2,5,10,25,50]
+        self.incr = self.iscale[3]
+        self.inc = 3        
+
+    def incN(self):
+        self.incr = self.iscale[3]
+        self.inc = 3    
+        self.lvinc.setText("incr = {0}".format(self.iscale[self.inc]))
+        
+    def incF(self):
+        if self.inc < (len(self.iscale)-1):
+            self.inc = self.inc + 1
+            self.incr = self.iscale[self.inc]            
+        self.lvinc.setText("incr = {0}".format(self.iscale[self.inc]))
+        
+    def incS(self):
+        if self.inc > 0:
+            self.inc= self.inc - 1
+            self.incr = self.iscale[self.inc]
+        self.lvinc.setText("incr = {0}".format(self.iscale[self.inc]))
         
     def camX(self):
         self.a.camera.azimuth = 0.0
@@ -264,54 +328,65 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         self.a.camera.azimuth = -10.0
         self.a.camera.elevation = 30.0
 
+    # Action on wp move     
      
     def incX(self):
-        self.wpx = self.wpx + self.incr
+        self.wpxmax = self.wpxmax + self.incr        
         self.redraw_cube()
         
     def decX(self):
-        self.wpx = self.wpx - self.incr
+        self.wpxmax = self.wpxmax - self.incr
         self.redraw_cube()        
 
-
     def incY(self):
-        self.wpy = self.wpy + self.incr
+        self.wpymax = self.wpymax + self.incr        
         self.redraw_cube()
-
         
     def decY(self):
-        self.wpy = self.wpy - self.incr
+        self.wpymax = self.wpymax - self.incr        
         self.redraw_cube()
         
     def incZ(self):
-        self.wpz = self.wpz + self.incr
+        self.wpzmax = self.wpzmax + self.incr        
         self.redraw_cube()        
         
     def decZ(self):
-        self.wpz = self.wpz - self.incr
+        self.wpzmax = self.wpzmax - self.incr
         self.redraw_cube()
         
     def triX(self):
-        self.wpox = self.wpox + self.incr
+        self.wpxmin = self.wpxmin + self.incr
+        self.wpxmax = self.wpxmax + self.incr
+        self.wpox = self.wpox + self.incr        
         self.redraw_cube()
         
     def trdX(self):
-        self.wpox = self.wpox - self.incr
+        self.wpxmin = self.wpxmin - self.incr
+        self.wpxmax = self.wpxmax - self.incr
+        self.wpox = self.wpox - self.incr        
         self.redraw_cube()        
 
     def triY(self):
+        self.wpymin = self.wpymin + self.incr
+        self.wpymax = self.wpymax + self.incr 
         self.wpoy = self.wpoy + self.incr
         self.redraw_cube()
-        
+     
     def trdY(self):
-        self.wpoy = self.wpoy - self.incr
+        self.wpymin = self.wpymin - self.incr
+        self.wpymax = self.wpymax - self.incr
+        self.wpoy = self.wpoy - self.incr        
         self.redraw_cube()
         
     def triZ(self):
+        self.wpzmin = self.wpzmin + self.incr
+        self.wpzmax = self.wpzmax + self.incr           
         self.wpoz = self.wpoz + self.incr
         self.redraw_cube()        
         
     def trdZ(self):
+        self.wpzmin = self.wpzmin - self.incr
+        self.wpzmax = self.wpzmax - self.incr           
         self.wpoz = self.wpoz - self.incr
         self.redraw_cube()        
 
@@ -319,6 +394,7 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         self.wpox = 0
         self.wpoy = 0
         self.wpoz = 0
+        self.wpxmin, self.wpxmax, self.wpymin, self.wpymax, self.wpzmin, self.wpzmax = self.wporig
         self.redraw_cube()         
 
 if __name__ == "__main__":

@@ -393,14 +393,13 @@ def clearWPUI(self):
 
 
 def writeWPdata(self,key):
-    data = glb.WorkPCs[key]    
+    glb.wpdata = glb.WorkPCs[key]    
 
     for idx,Eobject in enumerate((self.WPGSBLDX, self.WPGSBUDX, self.WPGSBLDY,
                                   self.WPGSBUDY, self.WPGSBLDZ,self.WPGSBUDZ)):
-        Eobject.setValue(float(data[idx]))
-    self.WPGCBMat.setCurrentIndex(int(data[6]))  
-    self.WPGTNote.setText(data[7])    
-
+        Eobject.setValue(float(glb.wpdata[idx]))
+    self.WPGCBMat.setCurrentIndex(int(glb.wpdata[6]))  
+    self.WPGTNote.setText(glb.wpdata[7])
 
 def wpMask(self,mskst):
     for f_object in (self.WPGSBLDX, self.WPGSBLDY, self.WPGSBLDZ, self.WPGSBUDX,
