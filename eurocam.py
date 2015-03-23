@@ -12,6 +12,7 @@ import os
 import errno
 import time
 import math
+import random
 from PySide import QtCore
 from PySide.QtGui import *
 from subprocess import call
@@ -26,6 +27,27 @@ plot = vv.use('pyside')
 import ec_mview as ECM
 stime = time.time()
 
+#Inherit from QThread
+class Worker(QtCore.QThread):
+
+    #This is the signal that will be emitted during the processing.
+    #By including int as an argument, it lets the signal know to expect
+    #an integer argument when emitting.
+    updateProgress = QtCore.Signal(int)
+
+    #You can do any extra things in this init you need, but for this example
+    #nothing else needs to be done expect call the super's init
+    def __init__(self):
+        QtCore.QThread.__init__(self)
+        print "worker init"    
+    #A QThread is run by calling it's start() function, which calls this run()
+    #function in it's own "thread". 
+    def run(self):
+        #Notice this is the same thing you were doing in your progress() function
+        for i in range(1, 101):
+            #Emit the signal so it can be received on the UI side.
+            self.updateProgress.emit(i)
+            time.sleep(0.1)
 
 class MainWindow(QMainWindow, Ui_MainWindow):
    
@@ -33,6 +55,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # maybe a spash screen goes here?
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)    
+
 
         # Binding for menu and close action
 
@@ -86,10 +109,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
         self.connect(self.MainTab,QtCore.SIGNAL('currentChanged(int)'),self.MainTabchosen)        
 
-
         self.StartAction()
 
     def StartAction(self):
+        # startaction()
+
         self.Log.append(" EuroCAM")
         
         self.Log.append(" Inifile = {0}".format(glb.inifile))
@@ -331,8 +355,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return True
 
     def Open_Drawing(self):
-        fileName, filtr = QFileDialog.getOpenFileName(self)
-        if fileName:
+        filters = [] # QStringList()
+        filters.append("*.stl")
+        filters.append("*.*")
+
+        dialog = QFileDialog()
+        dialog.setNameFilters(filters)
+        # TODO implementig the reising of the dialog        
+        #dialog.resize(100,100,600,600)
+
+
+        if dialog.exec_():
+            fileNames = dialog.selectedFiles()       
+        else:
+            return
+            
+        if len(fileNames) > 0:
+            fileName =  fileNames[0]
             glb.model[0] = fileName
             # assign the basename model as the fileName without the extension
             # and put it in
@@ -340,7 +379,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             basename = os.path.splitext(os.path.basename(fileName))[0]
             glb.basename =  os.path.join(ngcdir,basename)
             self.model_info(fileName)           
-            glb.M_Load = True
+
             EC_UA.popPCdata(self)            
             self.PCPBCal.setVisible(True)
         else:
@@ -352,8 +391,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.IL_2.setText("Basename Set")
         self.IL_2.setToolTip("Basename = <b>{0}</b>".format(glb.basename))        
         self.MdTName.setText("<b>{0}</b>".format(filename))
+       
+        self.load_model()        
+
+    def load_model(self):
+        filename = glb.model[0]
+        print "Load_model filename = ",filename
         self.md = ECM.ModelWindow()
         self.md.load_data(filename)
+        glb.M_Load = True
         dimx,dimy,dimz = self.md.getBB("md")
         self.MdTmX.setText("{0:6.3f}".format(dimx.min))        
         self.MdTmY.setText("{0:6.3f}".format(dimy.min))
@@ -408,7 +454,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if ret == QMessageBox.Yes:
             self.Log.append("Writing Settings") 
             self.writeSettings()
-            self.md.close()
+            # in case something is worng with the creation of the model we
+            # can close the window
+            try:
+                self.md.close()
+            except:
+                event.accept()
             event.accept()
         elif ret == QMessageBox.Cancel:
             event.ignore()
@@ -947,12 +998,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         m_name = self.PCMachCB.currentText()             
         t_name = self.PCToolCB.currentText()
         #retrieve the wp coordinates from the display window
-        data = self.md.get_wp_dim()
-        print data
+        glb.wpdim = self.md.get_wp_dim()
+        print glb.wpdim
+        #return # FIXME provvisorio        
 
-        return # FIXME provvisorio        
-                
-        wp_h = float(glb.wpdata[5])-float(glb.wpdata[4])  # height = zmax-zmin     
+        zmin = float(glb.wpdim[4])               
+        zmax = float(glb.wpdim[5])
+        
+        wp_h = zmax - zmin  # workpiece height      
+
+        # TODO if wp_h > max H_working emit a warning
+    
+        # TODO if the tool is not capable of centercut and the workpiece,
+        # is small than the model emit a warning
 
         feedrate = self.PCSBXYfc.value()
         plungerate = self.PCSBZfc.value()
@@ -985,7 +1043,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     break
         else:
             msgtxt = self.msg_08m
-            self.myYesDiag("",msgtxt,QMessageBox.Warning)
+            self.myYesDiag("",msgtxt,"",QMessageBox.Warning)
             return "KO"                    
 
         # maybe shape has to be considered in step down calculations ? 
@@ -998,20 +1056,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #TODO elaborate the negative coordinate strategy 
         z_steps = []
         z_pass = 1
-        z_steps.append(wp_h)
-        c_ht = wp_h - zpc
-        
-        while c_ht > 0:
+        # at the height of the piece         
+        z_steps.append(zmax)
+        c_ht = zmax - zpc
+        print "wp_h = {0} zpc = {1}".format(wp_h,zpc)
+        print "start loop"
+        while z_pass < 100: # set a safety for the number of pass
+            print "c_ht = {0}  zmin = {1} zmax = {2}".format( c_ht,zmin,zmax)
+           
             z_steps.append(c_ht)
             z_pass = z_pass + 1
             c_ht = c_ht - zpc
-            c_ht = int((c_ht * 10000) + 0.5) / 10000.0
-            
-        z_steps.append(0)     
+            c_ht = round(c_ht,5)
+            if c_ht < zmin:
+                z_steps.append(zmin)
+                break
+        else:
+            print "error in loop"
+        
+        print "end loop"    
+        print z_steps 
+     
 
         glb.z_steps = z_steps        
         
-        safe_height = 10 
+        safe_height = zmax + (zmax + 0.25) # TODO to be set in the UI 
 
         # put the calculated data in the appropriate places
         glb.PCData = []

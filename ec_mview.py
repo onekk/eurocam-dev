@@ -4,7 +4,6 @@ from ec_mview_ui import Ui_ModelWindow
 backend = 'pyside'
 import visvis as vv
 
-
 # Create a visvis app instance, which wraps a qt4 application object.
 # This needs to be done *before* instantiating the main window. 
 plot = vv.use(backend)
@@ -77,12 +76,30 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         dimx,dimy,dimz = self.getBB("md")
         self.xdim = dimx.max - dimx.min        
         self.ydim = dimy.max - dimy.min
-        self.zdim = dimz.max - dimz.min        
+        self.zdim = dimz.max - dimz.min
+
+        # set the limits of the grid larger than the model by an fixed
+        # amount
+        self.gscale = 0.33 
+        self.lxmin = dimx.min - (self.xdim)*self.gscale
+        self.lxmax = dimx.max + (self.xdim)*self.gscale
+        self.lymin = dimy.min - (self.ydim)*self.gscale
+        self.lymax = dimy.max + (self.ydim)*self.gscale
+        self.lzmin = dimz.min - (self.zdim)*self.gscale
+        self.lzmax = dimz.max + (self.zdim)*self.gscale
+        self.a.SetLimits((self.lxmin,self.lxmax),
+                         (self.lymin,self.lymax),
+                         (self.lzmin,self.lzmax))      
+        # draw the axes at the (origin) of the grid using the same color
+        # as the labels in the display window
+        self.draw_axes()        
         self.zoom = self.a.camera.zoom
         self.zinc = self.zoom/10.0
         self.dzoom = self.zoom        
         self.dspunit = 'units = {0}'.format(self.dunit)
+  
         self.show_md_dim(dimx,dimy,dimz)
+     
         return dimx,dimy,dimz
 
 
@@ -199,6 +216,38 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         self.vwpoy.setText(self.msg02.format(self.wpoy))
         self.vwpoz.setText(self.msg03.format(self.wpoz))
         self.lvinc.setText("incr = {0}".format(self.incr))
+
+
+    def draw_axes(self):
+        ppx = vv.Pointset(3)
+        ppx.append(self.lxmin, self.lymin, self.lzmin)
+        ppx.append(self.lxmax*1.25, self.lymin, self.lzmin)
+
+        self.xas = vv.Line(self.a,ppx)
+        self.xas.lw = 3
+        self.xas.lc = (1.0,0.0,0.0)
+        self.xas.ls = "+"
+        self.xas.visible = True       
+
+        ppy = vv.Pointset(3)
+        ppy.append(self.lxmin, self.lymin, self.lzmin)
+        ppy.append(self.lxmin, self.lymax*1.25, self.lzmin)
+
+        self.yas = vv.Line(self.a,ppy)
+        self.yas.lw = 3
+        self.yas.lc = (0,1.0,0.0)
+        self.yas.ls = "+"
+        self.yas.visible = True       
+
+        ppz = vv.Pointset(3)
+        ppz.append(self.lxmin, self.lymin, self.lzmin)
+        ppz.append(self.lxmin, self.lymin, self.lzmax*1.25)
+
+        self.zas = vv.Line(self.a,ppz)
+        self.zas.lw = 3
+        self.zas.lc = (0.0,0.0,1.0)
+        self.zas.ls = "+"
+        self.zas.visible = True       
        
     def Plot(self,surf):
         
@@ -209,25 +258,24 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         # Clear it
         vv.clf()
 
-        vv.xlabel('x axis')
-        vv.ylabel('y axis')
-        vv.zlabel('z axis')
+        #vv.xlabel('x axis')
+        #vv.ylabel('y axis')
+        #vv.zlabel('z axis')
         
         # plot the model
         
         self.t = vv.mesh(surf)
-        self.t.edgeColor = (0,0.05,0.05)
-        self.t.faceColor = (0,0.8,0.8)
+        self.t.edgeColor = (0,0.05,0.05,0.5)
+        self.t.faceColor = (0,0.8,0.8,0.5)
         self.t.specular = 0.2        
         self.t.faceShading = 'smooth'
         self.t.edgeShading = None        
         
         # Get axes and set camera to orthographic mode (with a field of view of 70)
         self.a = vv.gca()
-        self.a.axis.showGrid = True
         self.a.axis.showMinorGrid = True
         self.a.axis.axisColor = (0.5,0,0.5)
-        self.a.camera.fov = 45 
+        self.a.camera.fov = 45 # 45 
         self.a.light0.ambient = 0.7 # 0.2 is default for light 0
         self.a.light0.diffuse = 1.0 # 1.0 is default
 
@@ -252,9 +300,10 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         
     def showData(self):
         print self.a.GetView()
-        print "Zoom = {0}".format(self.zoom) 
+        print self.a.GetLimits()
+        print self.a.camera.daspect
+        #self.a.camera.loc = (70,50,0) 
         #print self.a.axis.lw
-        #self.surf.Transform_Scale(sx=1.5, sy=1.5, sz=1.5)
 
 
     def calc_increment(self):
@@ -331,71 +380,84 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
     # Action on wp move     
      
     def incX(self):
-        self.wpxmax = self.wpxmax + self.incr        
-        self.redraw_cube()
+        if self.wpvisible ==  True: 
+            self.wpxmax = self.wpxmax + self.incr        
+            self.redraw_cube()
         
     def decX(self):
-        self.wpxmax = self.wpxmax - self.incr
-        self.redraw_cube()        
+        if self.wpvisible ==  True:        
+            self.wpxmax = self.wpxmax - self.incr
+            self.redraw_cube()        
 
     def incY(self):
-        self.wpymax = self.wpymax + self.incr        
-        self.redraw_cube()
+        if self.wpvisible ==  True:                
+            self.wpymax = self.wpymax + self.incr        
+            self.redraw_cube()
         
     def decY(self):
-        self.wpymax = self.wpymax - self.incr        
-        self.redraw_cube()
+        if self.wpvisible ==  True:        
+            self.wpymax = self.wpymax - self.incr        
+            self.redraw_cube()
         
     def incZ(self):
-        self.wpzmax = self.wpzmax + self.incr        
-        self.redraw_cube()        
+        if self.wpvisible ==  True: 
+            self.wpzmax = self.wpzmax + self.incr        
+            self.redraw_cube()        
         
     def decZ(self):
-        self.wpzmax = self.wpzmax - self.incr
-        self.redraw_cube()
+        if self.wpvisible ==  True: 
+            self.wpzmax = self.wpzmax - self.incr
+            self.redraw_cube()
         
     def triX(self):
-        self.wpxmin = self.wpxmin + self.incr
-        self.wpxmax = self.wpxmax + self.incr
-        self.wpox = self.wpox + self.incr        
-        self.redraw_cube()
+        if self.wpvisible ==  True: 
+            self.wpxmin = self.wpxmin + self.incr
+            self.wpxmax = self.wpxmax + self.incr
+            self.wpox = self.wpox + self.incr        
+            self.redraw_cube()
         
     def trdX(self):
-        self.wpxmin = self.wpxmin - self.incr
-        self.wpxmax = self.wpxmax - self.incr
-        self.wpox = self.wpox - self.incr        
-        self.redraw_cube()        
+        if self.wpvisible ==  True: 
+            self.wpxmin = self.wpxmin - self.incr
+            self.wpxmax = self.wpxmax - self.incr
+            self.wpox = self.wpox - self.incr        
+            self.redraw_cube()        
 
     def triY(self):
-        self.wpymin = self.wpymin + self.incr
-        self.wpymax = self.wpymax + self.incr 
-        self.wpoy = self.wpoy + self.incr
-        self.redraw_cube()
+        if self.wpvisible ==  True: 
+            self.wpymin = self.wpymin + self.incr
+            self.wpymax = self.wpymax + self.incr 
+            self.wpoy = self.wpoy + self.incr
+            self.redraw_cube()
      
     def trdY(self):
-        self.wpymin = self.wpymin - self.incr
-        self.wpymax = self.wpymax - self.incr
-        self.wpoy = self.wpoy - self.incr        
-        self.redraw_cube()
+        if self.wpvisible ==  True: 
+            self.wpymin = self.wpymin - self.incr
+            self.wpymax = self.wpymax - self.incr
+            self.wpoy = self.wpoy - self.incr        
+            self.redraw_cube()
         
     def triZ(self):
-        self.wpzmin = self.wpzmin + self.incr
-        self.wpzmax = self.wpzmax + self.incr           
-        self.wpoz = self.wpoz + self.incr
-        self.redraw_cube()        
+        if self.wpvisible ==  True:         
+            self.wpzmin = self.wpzmin + self.incr
+            self.wpzmax = self.wpzmax + self.incr           
+            self.wpoz = self.wpoz + self.incr
+            self.redraw_cube()        
         
     def trdZ(self):
-        self.wpzmin = self.wpzmin - self.incr
-        self.wpzmax = self.wpzmax - self.incr           
-        self.wpoz = self.wpoz - self.incr
-        self.redraw_cube()        
+        if self.wpvisible ==  True: 
+            self.wpzmin = self.wpzmin - self.incr
+            self.wpzmax = self.wpzmax - self.incr           
+            self.wpoz = self.wpoz - self.incr
+            self.redraw_cube()        
 
     def off0(self):
-        self.wpox = 0
-        self.wpoy = 0
-        self.wpoz = 0
-        self.wpxmin, self.wpxmax, self.wpymin, self.wpymax, self.wpzmin, self.wpzmax = self.wporig
-        self.redraw_cube()         
+        if self.wpvisible ==  True:         
+            self.wpox = 0
+            self.wpoy = 0
+            self.wpoz = 0
+            self.wpxmin, self.wpxmax, self.wpymin, self.wpymax, self.wpzmin, self.wpzmax = self.wporig
+            self.redraw_cube()         
 
 if __name__ == "__main__":
     # The visvis way. Will run in interactive mode when used in IEP or IPython.    

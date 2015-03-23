@@ -232,7 +232,7 @@ class Ui_ModelWindow(object):
         self.but3 = QtGui.QPushButton(self.tW)
         self.but3.setText('Z')
         self.but4 = QtGui.QPushButton(self.tW)
-        self.but4.setText('Ortho')                      
+        self.but4.setText('Angled')                      
         self.but5 = QtGui.QPushButton(self.tW)
         self.but5.setText('Show')           
 
@@ -278,11 +278,15 @@ class Ui_ModelWindow(object):
         self.line4.setFrameShape(QtGui.QFrame.HLine)
         self.line4.setFrameShadow(QtGui.QFrame.Sunken)
         self.line4.setObjectName("line4")
-        
+
         self.line5 = QtGui.QFrame(self.vLW)
-        self.line5.setFrameShape(QtGui.QFrame.VLine)
-        self.line5.setFrameShadow(QtGui.QFrame.Sunken)
-        self.line5.setObjectName("line5")       
+        self.line6 = QtGui.QFrame(self.vLW)
+        self.line7 = QtGui.QFrame(self.vLW) 
+ 
+        for obj in (self.line5,self.line6,self.line7):        
+            obj.setFrameShape(QtGui.QFrame.VLine)
+            obj.setFrameShadow(QtGui.QFrame.Sunken)
+      
 
         self.line6 = QtGui.QFrame(self.vLW)
         self.line6.setFrameShape(QtGui.QFrame.VLine)
@@ -352,28 +356,28 @@ class Ui_ModelWindow(object):
             obj.setStyleSheet("color: blue")            
             obj.setFont(font)
             
-        self.vL.addWidget(self.line4, 0 , 0 , 1, 14)
-        self.vL.addWidget(self.line5, 0 , 6 , 5, 1)
-        self.vL.addWidget(self.line6, 0 , 8 , 5, 1)
+        self.vL.addWidget(self.line4, 0 , 0 , 1, 16)
+        self.vL.addWidget(self.line5, 0 , 13 , 5, 1)
+        self.vL.addWidget(self.line6, 0 , 15 , 5, 1)
 
         # add the labels and the offset value
 
         self.vL.addWidget(self.lwinc, 1, 9, 1, 3)
         self.vL.addWidget(self.lwoff, 1, 2, 1, 3)
-        self.vL.addWidget(self.lvinc, 1, 7, 1, 1)
+        self.vL.addWidget(self.lvinc, 1, 14, 1, 1)
 
 
         # add the zoom buttons 
 
-        self.vL.addWidget(self.butzi, 2, 14, 1, 1)
-        self.vL.addWidget(self.butz0, 3, 14, 1, 1)        
-        self.vL.addWidget(self.butzd, 4, 14, 1, 1)         
+        self.vL.addWidget(self.butzi, 2, 16, 1, 1)
+        self.vL.addWidget(self.butz0, 3, 16, 1, 1)        
+        self.vL.addWidget(self.butzd, 4, 16, 1, 1)         
 
         # add the increment buttons
 
-        self.vL.addWidget(self.butincn, 3, 7, 1, 1)
-        self.vL.addWidget(self.butincf, 2, 7, 1, 1)        
-        self.vL.addWidget(self.butincs, 4, 7, 1, 1)         
+        self.vL.addWidget(self.butincn, 3, 14, 1, 1)
+        self.vL.addWidget(self.butincf, 2, 14, 1, 1)        
+        self.vL.addWidget(self.butincs, 4, 14, 1, 1)         
 
         
         #add WP translation buttons

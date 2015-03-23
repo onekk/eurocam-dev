@@ -5,7 +5,7 @@ Created on Tue Mar 10 19:34:26 2015
 @author: carlo-m
 """
 import ocl
-import camvtk
+import camvtk_mod as camvtk
    
 def vtk_visualize_toolpath(stlfile, toolpaths):
     myscreen = camvtk.VTKScreen()

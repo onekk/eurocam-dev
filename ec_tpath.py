@@ -3,11 +3,10 @@
 # Anders Wallin 2014-02-23
 
 import time
-import vtk  # visualization
+#import vtk  # visualization
 import math
-
 import ocl        # https://github.com/aewallin/opencamlib
-import camvtk     # ocl helper library
+import camvtk_mod as camvtk     # ocl helper library for VTK version > 5
 import ec_ngc_fw as ngc_fw     # G-code output is produced by this module
 import ConfigParser
 
@@ -17,14 +16,21 @@ machine = ""
 preamble = ""
 postamble = ""
 t_name = ""
+debug = 0
+dims =[]
+show_path = 0
 
 def trace():
-    global machine,t_name,t_shape,diameter,feedrate,plungerate, safe_height, preamble, postamble    
+    global machine,t_name,t_shape,diameter,feedrate,plungerate, safe_height, \
+           preamble, postamble, debug, show_path,dims    
      
     config = ConfigParser.SafeConfigParser()
     config.read("./pathgen.ini")
     if config.sections() is not []:
-
+        
+        debug = int(config.get("General","debug"))
+        show_path = int(config.get("General","visualize"))
+        
         # Tool data
         t_name = config.get("Tool","name")  
         shape = float(config.get("Tool","sha"))            
@@ -38,14 +44,16 @@ def trace():
         #t_note = config.get("Tool","opt")    
         t_shape = config.get("Tool","sna") 
         
-        # Model data
+        # WorkPiece data
 
-        xmin = float(config.get("Model", "xmin"))
-        xmax = float(config.get("Model", "xmax"))
-        ymin = float(config.get("Model", "ymin"))    
-        ymax = float(config.get("Model", "ymax"))
-        zmin = float(config.get("Model", "zmin"))
-        zmax = float(config.get("Model", "zmax"))
+        xmin = float(config.get("WorkPiece", "xmin"))
+        xmax = float(config.get("WorkPiece", "xmax"))
+        ymin = float(config.get("WorkPiece", "ymin"))    
+        ymax = float(config.get("WorkPiece", "ymax"))
+        zmin = float(config.get("WorkPiece", "zmin"))
+        zmax = float(config.get("WorkPiece", "zmax"))
+        
+        dims = [xmin, xmax, ymin, ymax, zmin, zmax]
 
         # Machine data
         machine = config.get("Machine","mach_name") 
@@ -106,8 +114,10 @@ def trace():
         print "Default values used for test"
         paths = YdirectionZigPath(xmin,xmax,ymin,ymax,6)
 
-    t_path = time.time() - t_before      
-    print "prima di adaptive dropcutter = > ", t_path
+    t_path = time.time() - t_before
+
+    if debug  == 1:      
+        print "prima di adaptive dropcutter = > ", t_path
 
    # now project onto the STL surface
     t_before = time.time()
@@ -121,7 +131,9 @@ def trace():
     # filter raw toolpath to reduce size
     tolerance = 0.001
     (fil_tps, n_filtered) = filterCLPaths(raw_toolpath, tolerance=0.001)
-    print " Punti dopo filtro = ",n_filtered
+    if debug  == 1: 
+        print " Punti dopo filtro = ",n_filtered
+
     toolpaths = fil_tps
     for z_h in zslices:    
         toolpaths = sliceCLPaths(fil_tps,tolerance,z_h)
@@ -132,8 +144,8 @@ def trace():
         else:
             pass
 
-
-        ECV.vtk_visualize_toolpath(stlfile, toolpaths)
+        if show_path == 1:
+            ECV.vtk_visualize_toolpath(stlfile, toolpaths)
 
 # create a simple "Zig" pattern where we cut only in one direction.
 # the first line is at ymin
@@ -199,6 +211,8 @@ def adaptive_path_drop_cutter(surface, cutter, paths):
 # this could be any source of triangles
 # as long as it produces an ocl.STLSurf() we can work with
 def STLSurfaceSource(filename):
+    if debug  == 1: 
+        print filename
     stl = camvtk.STLSurf(filename)
     polydata = stl.src.GetOutput()
     s = ocl.STLSurf()
@@ -262,6 +276,7 @@ def write_gcode_file(filename,sourcefile, n_triangles, z_h, toolpath):
     ngc_fw.feedrate = feedrate       # feedrate
     ngc_fw.plungerate = plungerate   # plungrate
     ngc_fw.comment( " OpenCAMLib %s" % ocl.version() )
+    ngc_fw.comment( " Generated on date %s" % time.strftime("%c"))
     ngc_fw.comment( " STL surface  : {0}".format(sourcefile))
     ngc_fw.comment( "   triangles  : {0}".format(n_triangles))
     ngc_fw.comment( " Slice height : {0:.4}".format(z_h))
@@ -269,6 +284,10 @@ def write_gcode_file(filename,sourcefile, n_triangles, z_h, toolpath):
     ngc_fw.comment( "Tool name     : {0}".format(t_name))
     ngc_fw.comment( "Tool shape    : {0}".format(t_shape))
     ngc_fw.comment( "Tool diameter : {0:.4}".format(diameter))
+    ngc_fw.comment( "WorkPiece dims :")
+    ngc_fw.comment( "xmin = {0:6.4f} xmax = {0:6.4f}".format(dims[0],dims[1]))    
+    ngc_fw.comment( "ymin = {0:6.4f} ymax = {0:6.4f}".format(dims[2],dims[3]))
+    ngc_fw.comment( "zmin = {0:6.4f} zmax = {0:6.4f}".format(dims[4], dims[5]))        
     ngc_fw.comment( "Strategy      : {0}".format("strat"))
     ngc_fw.comment( "Direction     : {0} ".format("None")) 
     ngc_fw.filewrite(preamble+"\n")
@@ -281,7 +300,8 @@ def write_gcode_file(filename,sourcefile, n_triangles, z_h, toolpath):
         ngc_fw.pen_down(first_pt.z)
         for p in path[1:]:
             ngc_fw.line_to(p.x,p.y,p.z)
-        ngc_fw.comment("end of path")    
+        if debug == 1:        
+            ngc_fw.comment("end of path")
     ngc_fw.comment( " Start postamble ") 
     # write postamble        
     ngc_fw.filewrite(postamble+"\n")

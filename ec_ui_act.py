@@ -460,7 +460,7 @@ def wpConstraint(self):
     else:
         for obj in (self.WPGSBLDX, self.WPGSBUDX, self.WPGSBLDY, self.WPGSBUDY,
                     self.WPGSBLDZ, self.WPGSBUDZ):
-            obj.setRange(0.000, 2000.000)        
+            obj.setRange(-2000.000, 2000.000)        
             obj.setDecimals(3)
             obj.setSingleStep(0.5)
             obj.setSuffix(glb.tunit)

@@ -166,6 +166,8 @@ z_steps = []
 ## W
 # wp_fname   # see upper
 wpdata = []  # WP data selected in the PC Tab (used for toolpath gen.)
+wpdim = [] # hold the Wp data adjusetd with offset in the display window and
+           # ready to be sent to the toolpath generator  
 wp_plu = ""  # Hold the Workpiece plural
 wp_sin = ""  # Hold the Workpiece singular
 ## Y

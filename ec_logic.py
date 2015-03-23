@@ -166,8 +166,13 @@ def writePathfile(self,p_fname,action):
     z_steps = glb.PCData[8]           
                                   
     config = ConfigParser.SafeConfigParser()
-    #TODO all the lineas are to be config.set reading the appropriate vars
-    # maybe passing it has an argument of the module
+    
+    # add a general section to pass some variable or to set the beahviour of
+    # the program modifying the pathgen.ini file
+    config.add_section('General')
+    config.set("General","debug",str(0))       
+    config.set("General","visualize",str(1))
+    
     config.add_section('Tool')
     #config.set('Section1', 'an_int', '15')
     config.set("Tool","name", t_name )
@@ -175,10 +180,18 @@ def writePathfile(self,p_fname,action):
         config.set("Tool",name,value)            
     config.set("Tool","sna",glb.shape[int(glb.t_data[0])])    
 
-    config.add_section('Model')
+
+
+    config.add_section('WorkPiece')
     # Model data
-    for name,value in zip(glb.WorkPcdata,glb.wpdata):    
-        config.set("Model",name,str(value))                
+    config.set("WorkPiece","xmin",str(glb.wpdim[0]))                
+    config.set("WorkPiece","xmax",str(glb.wpdim[1]))            
+    config.set("WorkPiece","ymin",str(glb.wpdim[2]))            
+    config.set("WorkPiece","ymax",str(glb.wpdim[3]))
+    config.set("WorkPiece","zmin",str(glb.wpdim[4]))            
+    config.set("WorkPiece","zmax",str(glb.wpdim[5]))
+
+                                    
 
     config.add_section('Machine')
     # Machine data
