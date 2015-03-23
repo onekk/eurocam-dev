@@ -8,7 +8,7 @@ Created on Fri Feb 20 16:10:37 2015
 import os
 import sys
 
-version = "0.2.0 Alpha"
+version = "0.3.0 Alpha"
 
 debug = 3 # comment out to deactivate debug output
 # 0 create the ini file in ./EuroCAM

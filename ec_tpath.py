@@ -1,13 +1,14 @@
-
-# simple parallel finish toolpath example
-# Anders Wallin 2014-02-23
+# Eurocam Toolpath Generation Program
+# (c) Dormeletti Carlo 2015 
+# some routine is derived from
+# Anders Wallin code (c) 2014 
 
 import time
-#import vtk  # visualization
+import os
 import math
 import ocl        # https://github.com/aewallin/opencamlib
 import camvtk_mod as camvtk     # ocl helper library for VTK version > 5
-import ec_ngc_fw as ngc_fw     # G-code output is produced by this module
+import ec_ngc_fw as ngc_fw      # G-code output file is produced by this module
 import ConfigParser
 
 import ec_visu as ECV
@@ -19,10 +20,12 @@ t_name = ""
 debug = 0
 dims =[]
 show_path = 0
+version = "0.1.0 Alpha"
 
 def trace():
-    global machine,t_name,t_shape,diameter,feedrate,plungerate, safe_height, \
-           preamble, postamble, debug, show_path,dims    
+    global machine, t_name, t_shape, diameter, feedrate, plungerate, \
+           safe_height, preamble, postamble, debug, show_path, dims, \
+           slices, ec_version    
      
     config = ConfigParser.SafeConfigParser()
     config.read("./pathgen.ini")
@@ -30,6 +33,7 @@ def trace():
         
         debug = int(config.get("General","debug"))
         show_path = int(config.get("General","visualize"))
+        ec_version = config.get("General","ec_version") 
         
         # Tool data
         t_name = config.get("Tool","name")  
@@ -38,7 +42,6 @@ def trace():
         radius = float(config.get("Tool","rad")) 
         c_length = float(config.get("Tool","len"))
         length = float(config.get("Tool","ovl"))        
-        #c_length = float(config.get("Tool","len"))        
         flutes = int(config.get("Tool", "flu"))
         c_cut =  int(config.get("Tool", "cc"))
         #t_note = config.get("Tool","opt")    
@@ -71,10 +74,14 @@ def trace():
         plungerate = float(config.get("Path", "plungerate")) 
         safe_height = float(config.get("Path", "safe_height"))
         basename = config.get("Path", "basename")
-        stlfile = config.get("Path", "stlfile")        
+        stlfile = config.get("Path", "stlfile")
+
         zslices = []
         for s_index in xrange(1,slices+1):
             zslices.append(float(config.get("Path","slice-{}".format(s_index))))
+
+        ngcout = config.get("G-Code","info")
+
     else:
         print "file vuoto"
 
@@ -101,18 +108,20 @@ def trace():
 
     step = overlap
 
-    t_before = time.time()    
+    t_before = time.time()
+    ydim = ymax - ymin
+    xdim = xmax - xmin
     if dircut == "Y":
-        passes = ymax/step
+        passes = ydim/step
         Ny= int(math.ceil(passes)) #number of lines in the y-direction
-        paths = YdirectionZigPath(xmin,xmax,ymin,ymax,Ny)
+        paths = YdirectionZigPath(dims,Ny)
     elif dircut =="X":
-        passes = xmax/step
+        passes = xdim/step
         Nx= int(math.ceil(passes)) #number of lines in the x-direction
-        paths = XdirectionZigPath(xmin,xmax,ymin,ymax,Nx)
+        paths = XdirectionZigPath(dims,Nx)
     else:
         print "Default values used for test"
-        paths = YdirectionZigPath(xmin,xmax,ymin,ymax,6)
+        paths = YdirectionZigPath(dims,6)
 
     t_path = time.time() - t_before
 
@@ -124,23 +133,28 @@ def trace():
 
     surface = STLSurfaceSource(stlfile)    
 
-    (raw_toolpath, n_raw) = adaptive_path_drop_cutter(surface,cutter,paths)
+    (raw_toolpath, n_raw) = adaptive_path_drop_cutter(surface,cutter,paths,zmin)
     t1 = time.time() - t_before
-    print " Calcolo adpc ",t1," N punti = ",n_raw
+    if debug == 1:
+        print " Calcolo adpc ",t1," N punti = ",n_raw
 
     # filter raw toolpath to reduce size
     tolerance = 0.001
-    (fil_tps, n_filtered) = filterCLPaths(raw_toolpath, tolerance=0.001)
+    (fil_tps, n_filtered) = filterCLPaths(raw_toolpath, tolerance)
     if debug  == 1: 
         print " Punti dopo filtro = ",n_filtered
 
     toolpaths = fil_tps
+    count = 0
     for z_h in zslices:    
         toolpaths = sliceCLPaths(fil_tps,tolerance,z_h)
         if action == "ngc":
-            suffix = str(z_h).replace(".", "p")
-            filename = "-".join((basename,suffix,".ngc"))
-            write_gcode_file(filename, stlfile, surface.size() , z_h, toolpaths)
+            count = count + 1
+            suffix = "-s" + str(count) + "o" + str(slices) 
+            filename = "".join((basename,suffix,".ngc"))
+            if debug == 1:
+                print "Generating filename = ", os.path.basename(filename)
+            write_gcode_file(filename, stlfile,z_h, count, toolpaths)
         else:
             pass
 
@@ -150,8 +164,14 @@ def trace():
 # create a simple "Zig" pattern where we cut only in one direction.
 # the first line is at ymin
 # the last line is at ymax
-def YdirectionZigPath(xmin,xmax,ymin,ymax,Ny):
+def YdirectionZigPath(dims,Ny):
     paths = []
+    xmin = dims[0]
+    xmax = dims[1]
+    ymin = dims[2]
+    ymax = dims[3]
+    zmin = dims[4]
+    zmax = dims[5]
     dy = float(ymax-ymin)/(Ny-1)  # the y step-over
     for n in xrange(0,Ny):
         path = ocl.Path()
@@ -160,16 +180,22 @@ def YdirectionZigPath(xmin,xmax,ymin,ymax,Ny):
             assert( y==ymax)
         elif (n==0):
             assert( y==ymin)
-        p1 = ocl.Point(xmin,y,0)   # start-point of line
-        p2 = ocl.Point(xmax,y,0)   # end-point of line
+        p1 = ocl.Point(xmin,y,zmin)   # start-point of line
+        p2 = ocl.Point(xmax,y,zmin)   # end-point of line
         l = ocl.Line(p1,p2)        # line-object
         path.append( l )           # add the line to the path
            
         paths.append(path)
     return paths
 
-def XdirectionZigPath(xmin,xmax,ymin,ymax,Nx):
+def XdirectionZigPath(dims,Nx):
     paths = []
+    xmin = dims[0]
+    xmax = dims[1]
+    ymin = dims[2]
+    ymax = dims[3]
+    zmin = dims[4]
+    zmax = dims[5]    
     dx = float(xmax-xmin)/(Nx-1)  # the y step-over
     for n in xrange(0,Nx):
         path = ocl.Path()
@@ -178,8 +204,8 @@ def XdirectionZigPath(xmin,xmax,ymin,ymax,Nx):
             assert( x==xmax)
         elif (n==0):
             assert( x==xmin)
-        p1 = ocl.Point(x,ymin,0)   # start-point of line
-        p2 = ocl.Point(x,ymax,0)   # end-point of line
+        p1 = ocl.Point(x,ymin,zmax)   # start-point of line
+        p2 = ocl.Point(x,ymax,zmax)   # end-point of line
         l = ocl.Line(p1,p2)        # line-object
 
         path.append( l )           # add the line to the path
@@ -187,7 +213,7 @@ def XdirectionZigPath(xmin,xmax,ymin,ymax,Nx):
     return paths
 
 # run the actual drop-cutter algorithm
-def adaptive_path_drop_cutter(surface, cutter, paths):
+def adaptive_path_drop_cutter(surface, cutter, paths,z_h):
     apdc = ocl.AdaptivePathDropCutter()
     apdc.setSTL(surface)
     apdc.setCutter(cutter)
@@ -195,9 +221,10 @@ def adaptive_path_drop_cutter(surface, cutter, paths):
                                 # should be set so that we don't loose any detail of the STL model
                                 # i.e. this number should be similar or smaller than the smallest triangle
     apdc.setMinSampling(0.01) # minimum sampling or step-forward distance
-                                # the algorithm subdivides "steep" portions of the toolpath
-                                # until we reach this limit.
-    # 0.0008
+                              # the algorithm subdivides "steep" portions of the toolpath
+                              # until we reach this limit.
+    apdc.setZ(z_h)
+    print apdc.getZ()                            
     cl_paths=[]
     n_points=0
     for path in paths:
@@ -269,27 +296,32 @@ def filterCLPaths(cl_paths, tolerance=0.001):
     return (cl_filtered_paths, n_filtered)
 
 
-def write_gcode_file(filename,sourcefile, n_triangles, z_h, toolpath):
+def write_gcode_file(filename,sourcefile, z_h, count, toolpath):
     # uses ngc_fw and writes G-code to file
+    modelname = os.path.basename(sourcefile)
     ngc_fw.fileopen(filename)
-    ngc_fw.safe_height = safe_height       # XY rapids at this height
-    ngc_fw.feedrate = feedrate       # feedrate
-    ngc_fw.plungerate = plungerate   # plungrate
-    ngc_fw.comment( " OpenCAMLib %s" % ocl.version() )
-    ngc_fw.comment( " Generated on date %s" % time.strftime("%c"))
-    ngc_fw.comment( " STL surface  : {0}".format(sourcefile))
-    ngc_fw.comment( "   triangles  : {0}".format(n_triangles))
-    ngc_fw.comment( " Slice height : {0:.4}".format(z_h))
-    ngc_fw.comment( " Machine Name : {0}".format(machine))
+    ngc_fw.safe_height = safe_height   # XY rapids at this height
+    ngc_fw.feedrate = feedrate         # feedrate
+    ngc_fw.plungerate = plungerate     # plungrate
+    
+    ngc_fw.comment( "TPath Version      : {0}".format(version))    
+    ngc_fw.comment( "EuroCAM            : {0}".format(ec_version)) 
+    ngc_fw.comment( "OpenCAMLib version : {0}".format(ocl.version()))
+    ngc_fw.comment( "Generated on date {0}".format(time.strftime("%c")))
+    ngc_fw.comment( "STL surface file : {0}".format(modelname))
+    ngc_fw.comment( "Machine Name  : {0}".format(machine))
     ngc_fw.comment( "Tool name     : {0}".format(t_name))
     ngc_fw.comment( "Tool shape    : {0}".format(t_shape))
     ngc_fw.comment( "Tool diameter : {0:.4}".format(diameter))
-    ngc_fw.comment( "WorkPiece dims :")
-    ngc_fw.comment( "xmin = {0:6.4f} xmax = {0:6.4f}".format(dims[0],dims[1]))    
-    ngc_fw.comment( "ymin = {0:6.4f} ymax = {0:6.4f}".format(dims[2],dims[3]))
-    ngc_fw.comment( "zmin = {0:6.4f} zmax = {0:6.4f}".format(dims[4], dims[5]))        
+    ngc_fw.comment( "WorkPiece dimension ")
+    ngc_fw.comment( "xmin = {0:12.4f} xmax = {1:12.4f}".format(dims[0], dims[1]))    
+    ngc_fw.comment( "ymin = {0:12.4f} ymax = {1:12.4f}".format(dims[2], dims[3]))
+    ngc_fw.comment( "zmin = {0:12.4f} zmax = {1:12.4f}".format(dims[4], dims[5]))        
     ngc_fw.comment( "Strategy      : {0}".format("strat"))
     ngc_fw.comment( "Direction     : {0} ".format("None")) 
+    ngc_fw.comment( "Slice N. {0} of {1}".format(count,slices))    
+    ngc_fw.comment( "Slice height  : {0:.4}".format(z_h))
+
     ngc_fw.filewrite(preamble+"\n")
     ngc_fw.comment( " End of preamble ")    
     #TODO modify this behaviuor

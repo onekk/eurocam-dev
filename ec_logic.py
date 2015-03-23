@@ -172,14 +172,14 @@ def writePathfile(self,p_fname,action):
     config.add_section('General')
     config.set("General","debug",str(0))       
     config.set("General","visualize",str(1))
-    
+    config.set("General","ec_version",str(glb.version))
+        
     config.add_section('Tool')
     #config.set('Section1', 'an_int', '15')
     config.set("Tool","name", t_name )
     for name,value in zip(glb.Tooldata,glb.t_data):    
         config.set("Tool",name,value)            
     config.set("Tool","sna",glb.shape[int(glb.t_data[0])])    
-
 
 
     config.add_section('WorkPiece')
@@ -216,6 +216,10 @@ def writePathfile(self,p_fname,action):
     config.set("Path", "safe_height",str(safe_height))    
     config.set("Path", "basename",glb.basename)
     config.set("Path", "stlfile",glb.model[0])        
+
+    config.add_section('G-Code')
+    # Control G-Code file output
+    config.set("G-Code", "info","all")    
            
     with open(p_fname, 'wb') as configfile:
         config.write(configfile)                
