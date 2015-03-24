@@ -1,0 +1,155 @@
+<h2>EuroCAM</h2>
+<p>This program would be a pratical and fast replacement of pycam for linux 
+and maybe other OS.</p>
+
+<p>The hard work is done by OpenCAMLib from 
+https://github.com/aewallin/opencamlib.</p>
+
+<p>The program is still in Alpha stage but the main core is quite functional.</p>
+
+<h3>Configuration</h3>
+
+<p>At the first start up the program will create an setting directory depending on the value of the <b>localini</b> variable in <b>ec_glb.py</b>:
+<ul>
+<li>if 1 it will be created as a subdirectory of the current dir (./EuroCAM)</li>
+<li>otherwise it will be created in the user directory under ~/.config (~./config/EuroCAM)</li>
+</ul>
+</p>
+
+<p>In this directory there are some file:<br>
+<table border="1", cellpadding = 5>
+<tr><th align = "left">eurocam.ini</th><td>Hold the settings of the interface plus some setting like preferred unit preferred paths and so on</td></tr>
+<tr><th align = "left">tooltable.ini</th><td>Hold the tools list data</td></tr>
+<tr><th align = "left">machtable.ini</th><td>Hold the machines list data</td></tr>
+<tr><th align = "left">wptable.ini</th><td>Hold the workpieces data</td></tr>
+</table>
+</p>
+
+<p>In the main directory there are two file:<br>
+<ul>
+<li>machtable_model.ini</li>
+<li>tooltable_model.ini</li>
+</ul>
+</p>
+<p>These files are more populated with values to test the UI.</p>
+
+<p>if you copy them as machtable.ini or tooltable.ini after the default files are automatically created you will have some more values to test the ui, of course you can write them by hand, but if you use *inches* I haven't verified the correct work of the interface as is not clear to me how Qt handle the decimal separator with the locale settings and how to work with such measurement system)</p>
+
+<h3>USING</h3>
+
+<p>To use the program you have to specify at least one:
+<ul>
+<li>Machine</li>
+<li>Tool</li>
+<li>WorkPiece</li>
+</ul>
+</p>
+<ol>
+<li><p> First step is to go in menu file and choose "Open Drawing", it will open the
+ file, set the basename of the generated ngc files and open the display window with the model and some button for setting the workpiece dimensions<br>
+</p></li>
+
+<li><p>go to the *Processes Tab* to choose the milling operation you want set the 
+ desidered parameters and click on the "calculate" button</p></li>
+<li><p>Then s checked the program start to generate the files else it will generate a ini file
+ containing the istructions to generate the g-code (The option is here for future
+ testing or for testing the program without generating the files, (to skip the
+ time consuming operations)<br>
+ By default they are created in ngc subdir of the place where you launched the program.<br>
+ They have a filename composed by the name of the model file loaded plus the slice and with 
+the extension <b>.ngc</b> so if you have loaded a file named <b>penguin.stl</b> the and set 3 slices 
+ the program will generate three files <b>(penguin-s1o3.ngc, penguin-s2o3.ngc and 
+ penguin-s3o3.ngc)</b></p></li>
+
+<li><p>Wait a while and see if they are in the ngc directory.</p></li>
+</ol>
+
+
+The ngc file uses the information setted in the machine for the preamble and the
+postamble so you can set different init operation per different machines.
+
+You can also edit the ngc files generated and modify according your needs.
+
+For now only the <b>Slice Removal</b> strategy works, it assume that the overlap of the passes
+in X or Y direction are the diameter of the tool minus the overlap percentage
+calculate with this formula diameter-(diameter*overlap/100), if you set 25%
+it will be diameter -(diameter*0,25)  
+
+For the feedarate when the program is complete it will have a table containting
+ the maximal suggested feedrate for each material (it is your choice what values
+ are used ) but i will speed up the tuning operations of the gcode. 
+
+FOR NOW the feedrate is set using the maximun feedrate of the machine obtained
+
+- For the X and Y axis using the formula min(x-feedrate,y-feederate) and 
+  corrected by the factor in the spinbox for XY feed.
+
+- For the Z feedrate it is assumed the Z plungerate in the 
+ machine settings corrected by the factor in the plungerate spinbox.
+ 
+Both values are percentage so if you put in the box 90 you will obtain the 
+max feedrate multiplied per 1.90 if you input -10 you will obtain the max feedrate
+ multiplied by 0.90.  
+
+For now only the zig passess work either in X or in Y direction.   
+
+<h4>Tools</h4>
+
+Input SpinBox have a these limit:
+
+<table border="1">
+<tr><th>Values</th><th>for metric</th><th>for inches</th></tr>
+<tr><th>precision</th><td>0.001 (3 decimals)</td><td>0.0001 (4 decimals)</td></tr>
+<tr><th>Tool Diameter and Shaft diameter</th><td>0 to 25 mm</td><td>0 to 1 inch</td></tr>
+<tr><th>Cutter Length and Overall Length</th><td>0 to 100 mm</td><td>0 to 5 inch </td></tr>
+<tr><th>Radius</th><td>0 to 25 mm</td><td>0 to 1 inch </td></tr>
+<tr><th>Angle</th><td>0 to 180 degree </td><td>0 to 180 degree</td></tr>
+<tr><th>Number of flutes</th><td>12</td><td>12</td></tr>
+</table>
+
+The only check done is that the cutting length of the tool can't be greater than the overall length of the tool
+
+If you need to modify some of these limits, let me know and i modify them in the program. 
+
+
+<h4>Work Pieces</h4>
+
+
+You can set a upper and lower limits of the pieces, these are take in place to calculate the toolpaths as the start an stop axis movement, so you can set the model anywere in the workpiece setting them.
+
+Is left to you how to use your machine, so you can enter the limits of the worlpiece as 
+
+X: 0 min 10 max
+
+Y: 0 min 15 max
+
+Z: 0 min 4 max
+
+and then fix your larger workpiece on the machinable area and the program will calculate the toolpaths relative to this limits, eventually calcultat the toolpath only for a particular area of the model.
+
+For now there is no visualization of the model limits (work in progress, ready soon), in future there will be (similar at what happen in pycam) a visualization of the model with superimposted the workpiece limits so you can take more visually your decision.
+
+
+Input SpinBox have these limits:
+
+<table border="1">
+<tr><th>Values</th><th>for metric</th><th>for inches</th></tr>
+<tr><th>precision</th><td>0.001 (3 decimals)</td><td>0.0001 (4 decimals)</td></tr>
+<tr><th>Dimensions</th><td>0 to 2000 mm </td><td>0 to 80 inch</td></tr>
+</table>
+I thinks it is enough for the actual hobby machines, feel free to ask for a different sizes 
+
+<h4>Processes (Path Calculation)</h4>
+
+During the calculations come sata are used to avoid some mistakes:
+
+- The feedrate can't be greater than the machine feedrate
+- the step down can't be greater than the cutting length of the tool
+- The stepover is calculated starting to the tool diameter and applying the desidered overlap
+
+
+Good work and beware of flying chips.
+
+
+
+ 

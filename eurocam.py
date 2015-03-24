@@ -13,6 +13,7 @@ import errno
 import time
 import math
 import random
+from PySide import __version__ as PS_Ver
 from PySide import QtCore
 from PySide.QtGui import *
 from subprocess import call
@@ -56,6 +57,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)    
 
+        self.setWindowTitle("EuroCAM - {0}".format(glb.sversion))
 
         # Binding for menu and close action
 
@@ -64,10 +66,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExit.triggered.connect(self.close) 
         self.actionShow_display_window.triggered.connect(self.Model_Load)
         self.actionHelp.triggered.connect(self.HelpText)
-        
-        #self.menuInch
-        #self.actionGCF
-        #self.actionAbout_Qt
+        self.menuInch.triggered.connect(self.UnitChange)
+        self.actionGCF.triggered.connect(self.SetGbaseName)
+        self.actionAbout_Qt.triggered.connect(self.About_Qt)
 
 
         # Binding for Tool Tab 
@@ -173,16 +174,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Exit Dialog        
         self.msg_01t = self.tr("<b>Exit Dialog</b>")
         self.msg_01m = self.tr("Are you sure you want to exit?")
-
-        # About EuroCAM Box
-        self.msg_02t = self.tr("About EuroCAM")
-        self.msg_02m = self.tr("<p align =  center><b>EuroCAM</b>  \
-            <br> version {} <br> copyright Carlo Dormeletti 2015 </p><hr>\
-            <p align = left> It generates G-Code ready to be sent to a CNC \
-            machine.<br></p><p>It uses the great OpenCAMlib by Anders \
-            Wallins <br><b> https://github.com/aewallin/opencamlib\</b><br></p>\
-            ").format(glb.version)        
-
+        
+        self.msg_02m = self.tr("<p> There is no help file yet, please report\
+            this error at <br> <b> https://github.com/onekk/eurocam </b></p>")
         self.msg_03t = self.tr("This data are correct, do you want to write them? ")
         self.msg_04m = self.tr("Are you sure you wan to delete this {0}? ")
         self.msg_05m = self.tr("Only one {0} left, you can't cancel all {1}.")
@@ -203,6 +197,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.msg_16m = self.tr("The machines table will be created in {0}")
         self.msg_17m = self.tr("The workpieces table will be created in {0}")
         self.msg_18m = self.tr("You have to load a model to show a display window")
+
+        # About EuroCAM message
+        self.msg_a01t = self.tr("About EuroCAM")
+        self.msg_a01m = self.tr("<p align = left><b>EuroCAM</b> version \
+            <b>{0}</b> <br> copyright Carlo Dormeletti 2015 </p><hr>\
+            <p> It generates G-Code ready to be sent to a CNC machine.<br></p>\
+            <p align = left>For Issues and request about this program use the\
+            Issues function at: <br> <br>\
+            <b> https://github.com/onekk/eurocam </b></p>").format(glb.version)        
+
+        # About Qt message
+        self.msg_a02t = self.tr("About Qt")
+        self.msg_a02m = self.tr("<p><b>EuroCAM</b> version <b>{0}</b><br>\
+             is Using : <br><br> <b>Pyside</b> version = <b>{1}</b> Compiled \
+             using <br><b>Qt</b> version = <b>{2[0]}.{2[1]}.{2[2]}</b> <br>\
+             <br> Running on <b> Qt</b> version = <b>{3}</b> </p> \
+             <p> To obtain his features it use : <br>\
+             - the visvis library for the display window see at:<br> \
+             <b> https://code.google.com/p/visvis </b> <br> <br>\
+             - the great OpenCAMlib Library by Anders Wallins <br>\
+             see <b> https://github.com/aewallin/opencamlib</b><br><br> The \
+             exact version of OpenCamlib and the underlining VTK version, can\
+             be seen in the top comment of the generated G-Code files </p> \
+             ").format(glb.version, PS_Ver, QtCore.__version_info__, 
+                       QtCore.qVersion())
         
         self.msg_i01 = self.tr("Warning")
                         
@@ -281,7 +300,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             EC_UA.toolPaint(self)
         
         self.MainTab.removeTab(6) # self.TaskTab TODO delete when the task tab is finished
-        self.MainTab.setCurrentIndex(0)            
+        self.MainTab.setCurrentIndex(0)
+        self.RightTB.setCurrentIndex(1) # Show the Text TAB           
 
     ############################################
     #                                          #
@@ -381,7 +401,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             
     def About_EuroCAM(self):
-        QMessageBox.about(self,self.msg_02t,self.msg_02m) 
+        QMessageBox.about(self,self.msg_a01t,self.msg_a01m) 
           
 
     def Model_Load(self):
@@ -394,14 +414,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def HelpText(self):
-        self.RightTB.setCurrentIndex(1) # select the Image ToolBoxpass        
+        self.RightTB.setCurrentIndex(1) # select the Text ToolBox
+        locale = QtCore.QLocale.system().name()
+        helpfile = EC_L.search_paths("eurocam_help-" + locale +".txt")
+        if helpfile:
+            self.TWid.setSource(helpfile)
+        elif EC_L.search_paths("eurocam_help.txt"):
+            self.TWid.setSource(EC_L.search_paths("eurocam_help.txt"))
+        else:
+            self.TWid.setHtml(self.msg_02m)            
 
- 
-    # called by Exit menu item trough self.close() 
-    # and triggered also pressing the close button on the titlebar      
-    # event : QCloseEvent 
+    def UnitChange(self):
+        # FIXME add the action  
+        if self.menuInch.isChecked() == True:
+            print "unit inches"
+        else:
+            print "unit mm"
+
+    def SetGbaseName(self):
+        # FIXME add the action          
+        print "menu gcode basename"
+
+    def About_Qt(self):
+        QMessageBox.about(self,self.msg_a02t,self.msg_a02m) 
+
+
        
     def closeEvent(self, event):
+        '''
+        called by Exit menu item trough self.close() 
+        and triggered also pressing the close button on the titlebar      
+        event : QCloseEvent 
+        '''
         msgBox = QMessageBox()
         msgBox.setText(self.msg_01t)
         msgBox.setInformativeText(self.msg_01m)
@@ -558,7 +602,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     mtxt = mtxt + tln1.format(v,glb.oldata[i],glb.newdata[i]) 
         elif ctst == 2: # WP data
             for i,v in enumerate(glb.datahead):
-                if glb.debug:
+                if glb.debug > 3:
                     print "I V old New =>>",i,v,glb.oldata[i],glb.newdata[i]
                 if i in (0,1,2,3,4,5):
                     mtxt = mtxt + tln0.format(v,glb.oldata[i],glb.newdata[i]) 
@@ -575,44 +619,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return "OK"
         elif ret == "KO":
             return "KO" 
+
    
-
-    def showdataDiag(self,ctst,msginfo):
-        retrun
-        mtxt = "<table border='1' width = '300'>"
-        tln0 = "<tr><td> {0} </td><td align='right'>{1:.3}</td></tr>"
-        tln1 = "<tr><td> {0} </td><td align='right'>{1}</td></tr>"
-        tln2 = "<tr><td> {0} </td><td>{1}</td></tr>"
-        if ctst == 0: # Path Data
-            for i,v in enumerate(glb.showhead):
-                print i,v
-                if i in (2,3,4,5):
-                    mtxt = mtxt + tln0.format(v,glb.showdata[i]) 
-                elif i in (0,1):
-                    mtxt = mtxt + tln2.format(v,glb.showdata[i]) 
-                else:
-                    mtxt = mtxt + tln1.format(v,glb.showdata[i])                     
-        elif ctst == 1: # no data for now
-            for i,v in enumerate(glb.datahead):
-                #if glb.debug:
-                #    print "I V old New =>>",i,v,glb.oldata[i],glb.newdata[i]
-                if i in (): #decimal data
-                    mtxt = mtxt + tln0.format(v,glb.showdata[i]) 
-                elif i in (): # string data
-                    mtxt = mtxt + tln2.format(v,glb.showdata[i]) 
-                else: # integer data
-                    mtxt = mtxt + tln1.format(v,glb.showdata[i]) 
-     
-        mtxt = mtxt + "</table>"       
-
-        ret = self.myYesDiag("",mtxt, msginfo,QMessageBox.Question)
-             
-        if ret == "OK":
-            pass
-        elif ret == "KO":
-            return "KO" 
-   
-
     def myYesDiag(self,msgtit,msgtxt,msginfo = "" ,icon = QMessageBox.Warning ):
         msgBox = QMessageBox()
         msgBox.setText(msgtxt)
@@ -964,21 +972,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     #                                              #
     ################################################
 
+    def pc_buttons(self,action):
+        self.PCPBCt.setVisible(action)
+        self.PCPBGenG.setVisible(action)
+        self.GCPB1.setVisible(action)
+        self.GCPB2.setVisible(action)        
  
     def pc_mach_chosen(self,value):
         glb.machdata = glb.Machs[value]        
         self.pc_feed_data()          
         # Deactivate the buttons because some parameters are changed
-        self.PCPBCt.setVisible(False)
-        self.PCPBGenG.setVisible(False)       
- 
+        self.pc_buttons(False)
+   
 
     def pc_tool_chosen(self,value):
         glb.t_data = glb.Tools[value]              
         self.pc_step_data()          
         # Deactivate the buttons because some parameters are changed
-        self.PCPBCt.setVisible(False)
-        self.PCPBGenG.setVisible(False)       
+        self.pc_buttons(False)    
 
 
     def pc_wp_chosen(self,value):
@@ -989,8 +1000,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.pc_feed_data() 
         #self.pc_step_data()                        
         # Deactivate the buttons because some parameters are changed
-        self.PCPBCt.setVisible(False)
-        self.PCPBGenG.setVisible(False)       
+        self.pc_buttons(False)
 
 
     def pc_createTask(self):
@@ -998,16 +1008,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.MainTab.setCurrentIndex(6)
 
     def pc_genG(self):
-        # TODO activate the buttons in the GCode Tab
         self.MainTab.setCurrentIndex(5)
-
+        self.GCPB1.setVisible(True)
+        self.GCPB2.setVisible(True)
     
 
     def pc_calc_task(self):
         self.Log.append("Collecting task data")
         # Deactivate the controls 
-        self.PCPBCt.setVisible(False)
-        self.PCPBGenG.setVisible(False)
+
         #self.pc_coll_data()
         # Run the data check and the preliminary calculations
         ret = self.pc_calc_data()
@@ -1039,112 +1048,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.PCSBZfc.setValue(zfeed)
           
     def pc_calc_data(self):
-        # TODO consider the material data
-        m_name = self.PCMachCB.currentText()             
-        t_name = self.PCToolCB.currentText()
-        #retrieve the wp coordinates from the display window
-        glb.wpdim = self.md.get_wp_dim()
-        print glb.wpdim
-        #return # FIXME provvisorio        
-
-        zmin = float(glb.wpdim[4])               
-        zmax = float(glb.wpdim[5])
-        
-        wp_h = zmax - zmin  # workpiece height      
-
-        # TODO if wp_h > max H_working emit a warning
-    
-        # TODO if the tool is not capable of centercut and the workpiece,
-        # is small than the model emit a warning
-
-        feedrate = self.PCSBXYfc.value()
-        plungerate = self.PCSBZfc.value()
-        zpc = self.PCSBZsd.value()
-        xyovl = self.PCSBXYovl.value()
-        
-        # Select strategy for now it only cosmetic as only one strategy is
-        # implemented  
-        for i,obj in enumerate((self.PCSTRB1, self.PCSTRB2, self.PCSTRB3, self.PCSTRB4)):
-            if obj.isChecked():
-                if i == 0:
-                    strat = "SR"
-                    break            
-                elif i == 1:
-                    strat = "NC"
-                    break
-        else:
-             msgtxt = self.msg_12m
-             self.myYesDiag("",msgtxt,"",QMessageBox.Warning)
-             return "KO"                    
-        # dircut is obtained from the Process Tab (for now only X and Y work)
-
-        for i,obj in enumerate((self.PCPDRB1, self.PCPDRB2, self.PCPDRB3, self.PCPDRB4)):
-            if obj.isChecked():
-                if i == 0:
-                    dircut = "X"
-                    break
-                elif i == 1:
-                    dircut = "Y"
-                    break
-        else:
-            msgtxt = self.msg_08m
-            self.myYesDiag("",msgtxt,"",QMessageBox.Warning)
-            return "KO"                    
-
-        # maybe shape has to be considered in step down calculations ? 
-        # shape = int(glb.t_data[0])
-        # TODO check the alghoritmn to obtain the slices
- 
-        # TODO check a minimal height for the purpose of having the piece
-        # fixed on the base, or maybe create a grid of tabs, in the last pass?
-        #
-        #TODO elaborate the negative coordinate strategy 
-        z_steps = []
-        z_pass = 1
-        # at the height of the piece         
-        z_steps.append(zmax)
-        c_ht = zmax - zpc
-        print "wp_h = {0} zpc = {1}".format(wp_h,zpc)
-        print "start loop"
-        while z_pass < 100: # set a safety for the number of pass
-            print "c_ht = {0}  zmin = {1} zmax = {2}".format( c_ht,zmin,zmax)
-           
-            z_steps.append(c_ht)
-            z_pass = z_pass + 1
-            c_ht = c_ht - zpc
-            c_ht = round(c_ht,5)
-            if c_ht < zmin:
-                print c_ht, zmin
-                z_steps.append(zmin)
-                break
-        else:
-            print "error in loop"
-        
-        print "end loop"    
-        print z_steps 
-     
-
-        glb.z_steps = z_steps        
-        
-        safe_height = zmax + (zmax + 0.25) # TODO to be set in the UI 
-
-        # put the calculated data in the appropriate places
-        glb.PCData = []
-        # 0 = m_name, 1 = t_name, 2 = feedrate, 3 = plungerate, 4 = safe_height
-        # 5 = strat, 6 = dircut,  7 = xyovl,  8 = z_steps        
-        glb.PCData.append(m_name)
-        glb.PCData.append(t_name)
-        glb.PCData.append(feedrate)
-        glb.PCData.append(plungerate)
-        glb.PCData.append(safe_height)
-        glb.PCData.append(strat)
-        glb.PCData.append(dircut)
-        glb.PCData.append(xyovl) 
-        glb.PCData.append(z_steps)
-         
-        # All the validation are OK make the button visible
-        #self.PCPBCt.setVisible(True) # TODO has to be 
-        self.PCPBGenG.setVisible(True)
+        EC_L.calc_process(self)
 
 
     ################################################
@@ -1166,7 +1070,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # TODO read the checkboxes and set the variables to generate the G-Code
         #        
         pass
-
 
 
     ################################################
@@ -1225,4 +1128,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

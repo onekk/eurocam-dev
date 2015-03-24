@@ -224,4 +224,120 @@ def writePathfile(self,p_fname,action):
     with open(p_fname, 'wb') as configfile:
         config.write(configfile)                
             
-            
+        # XY feed is the minimun between X and Y feedrate
+        # TODO consider the material data    
+        xyfeed = min(float(glb.machdata[3]),float(glb.machdata[4]))
+        self.PCSBXYfc.setValue(xyfeed)
+        zfeed = float(glb.machdata[5])
+        self.PCSBZfc.setValue(zfeed)
+          
+def calc_process(self):
+        # TODO consider the material data
+        m_name = self.PCMachCB.currentText()             
+        t_name = self.PCToolCB.currentText()
+        #retrieve the wp coordinates from the display window
+        glb.wpdim = self.md.get_wp_dim()
+        print glb.wpdim
+        #return # FIXME provvisorio        
+
+        zmin = float(glb.wpdim[4])               
+        zmax = float(glb.wpdim[5])
+        
+        wp_h = zmax - zmin  # workpiece height      
+
+        # TODO if wp_h > max H_working emit a warning
+    
+        # TODO if the tool is not capable of centercut and the workpiece,
+        # is small than the model emit a warning
+
+        feedrate = self.PCSBXYfc.value()
+        plungerate = self.PCSBZfc.value()
+        zpc = self.PCSBZsd.value()
+        xyovl = self.PCSBXYovl.value()
+        
+        # Select strategy for now it only cosmetic as only one strategy is
+        # implemented  
+        for i,obj in enumerate((self.PCSTRB1, self.PCSTRB2, self.PCSTRB3, self.PCSTRB4)):
+            if obj.isChecked():
+                if i == 0:
+                    strat = "SR"
+                    break            
+                elif i == 1:
+                    strat = "NC"
+                    break
+        else:
+             msgtxt = self.msg_12m
+             self.myYesDiag("",msgtxt,"",QMessageBox.Warning)
+             return "KO"                    
+        # dircut is obtained from the Process Tab (for now only X and Y work)
+
+        for i,obj in enumerate((self.PCPDRB1, self.PCPDRB2, self.PCPDRB3, self.PCPDRB4)):
+            if obj.isChecked():
+                if i == 0:
+                    dircut = "X"
+                    break
+                elif i == 1:
+                    dircut = "Y"
+                    break
+        else:
+            msgtxt = self.msg_08m
+            self.myYesDiag("",msgtxt,"",QMessageBox.Warning)
+            return "KO"                    
+
+        # maybe shape has to be considered in step down calculations ? 
+        # shape = int(glb.t_data[0])
+        # TODO check the alghoritmn to obtain the slices
+ 
+        # TODO check a minimal height for the purpose of having the piece
+        # fixed on the base, or maybe create a grid of tabs, in the last pass?
+        #
+        #TODO elaborate the negative coordinate strategy 
+        z_steps = []
+        z_pass = 1
+        # at the height of the piece         
+        z_steps.append(zmax)
+        c_ht = zmax - zpc
+        if glb.debug > 1:
+            print "wp_h = {0} zpc = {1}".format(wp_h,zpc)
+            print "start loop"
+        # FIXME verify for a redundant 0.0 slice
+        while z_pass < 100: # set a safety for the number of pass
+            print "c_ht = {0}  zmin = {1} zmax = {2}".format( c_ht,zmin,zmax)
+           
+            z_steps.append(c_ht)
+            z_pass = z_pass + 1
+            c_ht = c_ht - zpc
+            c_ht = round(c_ht,5)
+            if c_ht <= zmin:
+                print c_ht, zmin
+                z_steps.append(zmin)
+                break
+        else:
+            print "error in loop"
+
+        if glb.debug > 1:        
+            print "end loop"    
+            print z_steps 
+     
+
+        glb.z_steps = z_steps        
+        
+        safe_height = zmax + (zmax + 0.25) # TODO to be set in the UI 
+
+        # put the calculated data in the appropriate places
+        glb.PCData = []
+        # 0 = m_name, 1 = t_name, 2 = feedrate, 3 = plungerate, 4 = safe_height
+        # 5 = strat, 6 = dircut,  7 = xyovl,  8 = z_steps        
+        glb.PCData.append(m_name)
+        glb.PCData.append(t_name)
+        glb.PCData.append(feedrate)
+        glb.PCData.append(plungerate)
+        glb.PCData.append(safe_height)
+        glb.PCData.append(strat)
+        glb.PCData.append(dircut)
+        glb.PCData.append(xyovl) 
+        glb.PCData.append(z_steps)
+         
+        # All the validation are OK make the button visible
+        #self.PCPBCt.setVisible(True) # TODO activate when the Tab is done  
+        self.PCPBGenG.setVisible(True)            

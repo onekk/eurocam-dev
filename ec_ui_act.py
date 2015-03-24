@@ -22,6 +22,7 @@ def initUI(self):
     popMachUI(self)
     popWPUI(self)
     initPCUI(self)
+    initGCUI(self)
     
 
         
@@ -60,6 +61,7 @@ def initGV(self):
     self.GV.setScene(self.scene)        
 
 def toolPaint(self):
+    self.RightTB.setCurrentIndex(0) # Image Tab
     rect1 = self.scene.addRect(150,100,40,80)
     #rect1.fill()    
     #text = self.scene.addText('hello')
@@ -501,5 +503,20 @@ def popPCdata(self):
         glb.wpdata = glb.WorkPCs[w_name]
         
 
-    
+################### G-Code  UI
+
+def initGCUI(self):
+    # disable the checkbox 
+    greyGC(self,False)
+    self.GCT1.setEnabled(False)
+
+    for obj in (self.GCPB1, self.GCPB2, self.GCPB3 ):
+        obj.setVisible(False)        
+ 
+def greyGC(self,action):
+    for obj in (self.GCmodel, self.GCmachine, self.GCtool, self.GCwp, 
+                self.GCtp, self.GCverbose, self.GCdecimals, self.GCview, 
+                self.GCSBd):
+        obj.setEnabled(action)
+   
 ###################

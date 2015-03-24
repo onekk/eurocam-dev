@@ -1403,7 +1403,7 @@
         <widget class="QLineEdit" name="GCT1"/>
        </item>
        <item row="9" column="1">
-        <widget class="QSpinBox" name="spinBox"/>
+        <widget class="QSpinBox" name="GCSBd"/>
        </item>
        <item row="11" column="0">
         <widget class="QCheckBox" name="GCview">
@@ -1450,9 +1450,6 @@
        </item>
       </layout>
      </widget>
-     <zorder>gridLayoutWidget_5</zorder>
-     <zorder>horizontalLayoutWidget_2</zorder>
-     <zorder>line_2</zorder>
     </widget>
     <widget class="QWidget" name="TaskTab">
      <attribute name="title">
@@ -1647,8 +1644,8 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>381</width>
-       <height>413</height>
+       <width>98</width>
+       <height>28</height>
       </rect>
      </property>
      <attribute name="label">
@@ -1677,7 +1674,7 @@
      <attribute name="label">
       <string>TextBox</string>
      </attribute>
-     <widget class="QTextBrowser" name="textBrowser">
+     <widget class="QTextBrowser" name="TWid">
       <property name="geometry">
        <rect>
         <x>0</x>

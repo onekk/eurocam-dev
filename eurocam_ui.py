@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'eurocam.ui'
 #
-# Created: Tue Mar 24 11:42:59 2015
+# Created: Tue Mar 24 18:12:40 2015
 #      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -630,9 +630,9 @@ class Ui_MainWindow(object):
         self.GCT1 = QtGui.QLineEdit(self.gridLayoutWidget_5)
         self.GCT1.setObjectName("GCT1")
         self.gridLayout_6.addWidget(self.GCT1, 1, 0, 1, 1)
-        self.spinBox = QtGui.QSpinBox(self.gridLayoutWidget_5)
-        self.spinBox.setObjectName("spinBox")
-        self.gridLayout_6.addWidget(self.spinBox, 9, 1, 1, 1)
+        self.GCSBd = QtGui.QSpinBox(self.gridLayoutWidget_5)
+        self.GCSBd.setObjectName("GCSBd")
+        self.gridLayout_6.addWidget(self.GCSBd, 9, 1, 1, 1)
         self.GCview = QtGui.QCheckBox(self.gridLayoutWidget_5)
         self.GCview.setObjectName("GCview")
         self.gridLayout_6.addWidget(self.GCview, 11, 0, 1, 1)
@@ -730,7 +730,7 @@ class Ui_MainWindow(object):
         self.RightTB.setGeometry(QtCore.QRect(380, 40, 381, 471))
         self.RightTB.setObjectName("RightTB")
         self.GWid = QtGui.QWidget()
-        self.GWid.setGeometry(QtCore.QRect(0, 0, 381, 413))
+        self.GWid.setGeometry(QtCore.QRect(0, 0, 98, 28))
         self.GWid.setObjectName("GWid")
         self.GV = QtGui.QGraphicsView(self.GWid)
         self.GV.setGeometry(QtCore.QRect(0, 0, 381, 391))
@@ -739,9 +739,9 @@ class Ui_MainWindow(object):
         self.TAL = QtGui.QWidget()
         self.TAL.setGeometry(QtCore.QRect(0, 0, 381, 413))
         self.TAL.setObjectName("TAL")
-        self.textBrowser = QtGui.QTextBrowser(self.TAL)
-        self.textBrowser.setGeometry(QtCore.QRect(0, 0, 381, 381))
-        self.textBrowser.setObjectName("textBrowser")
+        self.TWid = QtGui.QTextBrowser(self.TAL)
+        self.TWid.setGeometry(QtCore.QRect(0, 0, 381, 381))
+        self.TWid.setObjectName("TWid")
         self.RightTB.addItem(self.TAL, "")
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtGui.QStatusBar(MainWindow)

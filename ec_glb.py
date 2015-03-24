@@ -8,13 +8,16 @@ Created on Fri Feb 20 16:10:37 2015
 import os
 import sys
 
-version = "0.3.0 Alpha"
+
+sversion = "0.4"
+version = sversion + ".1 Alpha"
 
 debug = 3 # comment out to deactivate debug output
-# 0 create the ini file in ./EuroCAM
-# 1 create the ini file in ]~/.config/EuroCAM  
-localini = 1
 
+localini = 1
+# 0 create the ini file in ./EuroCAM
+# 1 create the ini file in ]~/.config/EuroCAM
+  
 #TODO check if work in windows and macs too
 def ini_search_paths(file_name):
     paths = map(
@@ -144,7 +147,7 @@ showdata = []
 showhead = []
 stime = "" 
 spunit = ""   # Speed unit mm/min or IPS (Inch per second)
-
+#sversion     # see upper
 ## T
 # toolf_name  # see upper
 t_data = []   # tooldata selected in the PC Tab (used for toolpath gen.)
