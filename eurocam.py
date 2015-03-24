@@ -62,6 +62,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionOpen_Drawing.triggered.connect(self.Open_Drawing)
         self.actionAbout_EuroCAM.triggered.connect(self.About_EuroCAM)
         self.actionExit.triggered.connect(self.close) 
+        self.actionShow_display_window.triggered.connect(self.Model_Load)
+        self.actionHelp.triggered.connect(self.HelpText)
+        
+        #self.menuInch
+        #self.actionGCF
+        #self.actionAbout_Qt
+
 
         # Binding for Tool Tab 
 
@@ -104,7 +111,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.PCSBSdc.valueChanged.connect(self.pc_SB_uV)    
         #self.PCSBOvl.valueChanged.connect(self.pc_Ovl_uV)    
         
-        self.md = None # create a viìoid reference for the model
+        self.md = None # create a void reference for the model
                        # display window otherwise it will be destroyed
     
         self.connect(self.MainTab,QtCore.SIGNAL('currentChanged(int)'),self.MainTabchosen)        
@@ -195,7 +202,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.msg_15m = self.tr("The tools table will be created in {0}")
         self.msg_16m = self.tr("The machines table will be created in {0}")
         self.msg_17m = self.tr("The workpieces table will be created in {0}")
-
+        self.msg_18m = self.tr("You have to load a model to show a display window")
+        
         self.msg_i01 = self.tr("Warning")
                         
         ####################################################################
@@ -270,8 +278,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         EC_UA.initGV(self)
         if self.MainTab.currentIndex() == 2:
-            EC_UA.toolPaint(self)            
-     
+            EC_UA.toolPaint(self)
+        
+        self.MainTab.removeTab(6) # self.TaskTab TODO delete when the task tab is finished
+        self.MainTab.setCurrentIndex(0)            
+
+    ############################################
+    #                                          #
+    # Files creation usually at the first run  # 
+    #                                          #
+    ############################################
 
     def create_inifile(self,path):
         msgtxt = self.msg_14m.format(path)
@@ -304,7 +320,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         glb.f_wptable = glb.ini_search_paths(glb.wp_name)        
         EC_L.writeWPtable(self) 
 
-######### inifile actions
+    # inifile actions
 
     def readSettings(self):
         settings = QtCore.QSettings(glb.inifile, QtCore.QSettings.IniFormat)    
@@ -325,35 +341,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #settings.setValue("other","prova")
         settings.endGroup()
 
-######### 
 
-
-    def MainTabchosen(self,value):
-        if value == 2:
-            EC_UA.toolPaint(self)
-        elif value == 3:
-            text = self.WPCB.currentText()
-            self.change_wp(text)
-        else:
-            print "Tab number = ",value
-            EC_UA.clearGV(self)
-
-       
-    def About_EuroCAM(self):
-        QMessageBox.about(self,self.msg_02t,self.msg_02m) 
-        
-    def maybeSave(self):
-        if glb.ModelMod is True:
-            ret = QMessageBox.warning(self, "Application",
-                    "The document has been modified.\nDo you want to save "
-                    "your changes?",
-                    QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
-            if ret == QMessageBox.Save:
-                return self.save()
-            elif ret == QMessageBox.Cancel:
-                return False
-        return True
-
+    ######################################
+    #                                    #     
+    # Menu actions                       #
+    #                                    #
+    ######################################
+  
     def Open_Drawing(self):
         filters = [] # QStringList()
         filters.append("*.stl")
@@ -384,6 +378,84 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.PCPBCal.setVisible(True)
         else:
             return
+
+            
+    def About_EuroCAM(self):
+        QMessageBox.about(self,self.msg_02t,self.msg_02m) 
+          
+
+    def Model_Load(self):
+        if glb.M_Load == True:
+            filename = glb.model[0]
+            self.md = ECM.ModelWindow()
+            self.md.load_data(filename)
+        else:
+            self.myYesDiag(self.msg_i01,self.msg_18m,"",QMessageBox.Information)
+
+
+    def HelpText(self):
+        self.RightTB.setCurrentIndex(1) # select the Image ToolBoxpass        
+
+ 
+    # called by Exit menu item trough self.close() 
+    # and triggered also pressing the close button on the titlebar      
+    # event : QCloseEvent 
+       
+    def closeEvent(self, event):
+        msgBox = QMessageBox()
+        msgBox.setText(self.msg_01t)
+        msgBox.setInformativeText(self.msg_01m)
+        msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
+        msgBox.setDefaultButton(QMessageBox.Yes)
+        msgBox.setIcon(QMessageBox.Question)
+        ret = msgBox.exec_()
+        event.ignore()
+        if ret == QMessageBox.Yes:
+            self.Log.append("Writing Settings") 
+            self.writeSettings()
+            # in case something is worng with the creation of the model we
+            # can close the window
+            try:
+                self.md.close()
+            except:
+                event.accept()
+            event.accept()
+        elif ret == QMessageBox.Cancel:
+            event.ignore()
+
+  
+    ######################################
+    #                                    #     
+    # Miscellaneous actions              #
+    #                                    #
+    ######################################
+
+
+
+    def MainTabchosen(self,value):
+        if value == 2:
+            EC_UA.toolPaint(self)
+        elif value == 3:
+            text = self.WPCB.currentText()
+            self.change_wp(text)
+        else:
+            print "Tab number = ",value
+            EC_UA.clearGV(self)
+
+
+    def maybeSave(self):
+        if glb.ModelMod is True:
+            ret = QMessageBox.warning(self, "Application",
+                    "The document has been modified.\nDo you want to save "
+                    "your changes?",
+                    QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+            if ret == QMessageBox.Save:
+                return self.save()
+            elif ret == QMessageBox.Cancel:
+                return False
+        return True
+
+
     
     def model_info(self,filename):
         self.IL_1.setText("Model Loaded")
@@ -396,18 +468,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def load_model(self):
         filename = glb.model[0]
-        print "Load_model filename = ",filename
         self.md = ECM.ModelWindow()
         self.md.load_data(filename)
         glb.M_Load = True
-        dimx,dimy,dimz = self.md.getBB("md")
-        self.MdTmX.setText("{0:6.3f}".format(dimx.min))        
-        self.MdTmY.setText("{0:6.3f}".format(dimy.min))
-        self.MdTmZ.setText("{0:6.3f}".format(dimz.min))         
-        self.MdTMX.setText("{0:6.3f}".format(dimx.max))        
-        self.MdTMY.setText("{0:6.3f}".format(dimy.max))
-        self.MdTMZ.setText("{0:6.3f}".format(dimz.max))
-
+        dims = self.md.getBB("md")
+        EC_UA.writeMddata(self,dims)
 
     def change_wp(self,value):
         EC_UA.writeWPdata(self,value)
@@ -441,28 +506,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.showMessage("save selected")
 
 
-    # event : QCloseEvent
-    def closeEvent(self, event):
-        msgBox = QMessageBox()
-        msgBox.setText(self.msg_01t)
-        msgBox.setInformativeText(self.msg_01m)
-        msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
-        msgBox.setDefaultButton(QMessageBox.Yes)
-        msgBox.setIcon(QMessageBox.Question)
-        ret = msgBox.exec_()
-        event.ignore()
-        if ret == QMessageBox.Yes:
-            self.Log.append("Writing Settings") 
-            self.writeSettings()
-            # in case something is worng with the creation of the model we
-            # can close the window
-            try:
-                self.md.close()
-            except:
-                event.accept()
-            event.accept()
-        elif ret == QMessageBox.Cancel:
-            event.ignore()
 
 
     def create_path_and_inifile(self,path,inifile):
@@ -481,6 +524,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             msgtxt = "Unable to create file {0} in {1}".format(inifile,path)
             icon = QMessageBox.Information                
             self.myYesDiag(msgtit,msgtxt,icon)
+
+
+    ###################################
+    #                                 #
+    # Dialog used in the interface    #         
+    #                                 #
+    ###################################
 
 
     def dataModDiag(self,ctst,msginfo):
@@ -908,7 +958,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.Log.append("Re Populating UI WorkPieces table")
 
 
-
     ################################################
     #                                              #
     # Processes Tab related actions                #
@@ -945,17 +994,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def pc_createTask(self):
-        p_fname = "./pathfile.ini"
-        EC_L.writePathfile(self,p_fname,"tsk")            
-
+        # TODO the action for create Task
+        self.MainTab.setCurrentIndex(6)
 
     def pc_genG(self):
-        # the filename has to be "pathgen.ini" because it is hardcoded
-        # in ec_tpath.py as the input file
-        p_fname = "./pathgen.ini"
-        EC_L.writePathfile(self,p_fname,"ngc")
-        # call the external program to generate Gcode    
-        call(["python","ec_tpath.py"]) #if in same directory, else get abs path 
+        # TODO activate the buttons in the GCode Tab
+        self.MainTab.setCurrentIndex(5)
+
     
 
     def pc_calc_task(self):
@@ -1069,6 +1114,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             c_ht = c_ht - zpc
             c_ht = round(c_ht,5)
             if c_ht < zmin:
+                print c_ht, zmin
                 z_steps.append(zmin)
                 break
         else:
@@ -1097,8 +1143,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         glb.PCData.append(z_steps)
          
         # All the validation are OK make the button visible
-        self.PCPBCt.setVisible(True)
+        #self.PCPBCt.setVisible(True) # TODO has to be 
         self.PCPBGenG.setVisible(True)
+
+
+    ################################################
+    #                                              #
+    # G-Code Tab related actions                   #
+    #                                              #
+    ################################################
+
+
+    def GenNGC(self):
+        # the filename has to be "pathgen.ini" because it is hardcoded
+        # in ec_tpath.py as the input file
+        p_fname = "./pathgen.ini"
+        EC_L.writePathfile(self,p_fname,"ngc")
+        # call the external program to generate Gcode    
+        call(["python","ec_tpath.py"]) #if in same directory, else get abs path 
+
+    def ReadCheckBox(self):
+        # TODO read the checkboxes and set the variables to generate the G-Code
+        #        
+        pass
+
+
+
+    ################################################
+    #                                              #
+    # Task (self.TaskTab) related actions          #
+    #                                              #
+    ################################################
+
+
+    def CreateTask(self):
+        p_fname = "./pathfile.ini"
+        EC_L.writePathfile(self,p_fname,"tsk")            
+
 
     
 ##########################################

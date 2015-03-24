@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>5</number>
     </property>
     <widget class="QWidget" name="ModelTab">
      <attribute name="title">
@@ -97,8 +97,12 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="2">
-        <widget class="QLineEdit" name="MdTMY"/>
+       <item row="1" column="0">
+        <widget class="QLabel" name="MdLX">
+         <property name="text">
+          <string>Model X</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="0">
         <widget class="QLabel" name="MdLY">
@@ -107,12 +111,8 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="MdLX">
-         <property name="text">
-          <string>Model X</string>
-         </property>
-        </widget>
+       <item row="2" column="2">
+        <widget class="QLineEdit" name="MdTMY"/>
        </item>
        <item row="1" column="2">
         <widget class="QLineEdit" name="MdTMX"/>
@@ -148,38 +148,40 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0" colspan="2">
-        <widget class="QLabel" name="MdLT">
-         <property name="text">
-          <string>Model Triangles</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3">
+       <item row="1" column="4">
         <widget class="QLabel" name="MdLdimx">
          <property name="text">
           <string>mm</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="3">
-        <widget class="QLabel" name="MdLdimy">
-         <property name="text">
-          <string>mm</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="3">
+       <item row="3" column="4">
         <widget class="QLabel" name="MdLdimz">
          <property name="text">
           <string>mm</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="2" colspan="2">
-        <widget class="QLineEdit" name="MdTT">
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       <item row="2" column="4">
+        <widget class="QLabel" name="MdLdimy">
+         <property name="text">
+          <string>mm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QLineEdit" name="MdTdimx"/>
+       </item>
+       <item row="2" column="3">
+        <widget class="QLineEdit" name="MdTdimy"/>
+       </item>
+       <item row="3" column="3">
+        <widget class="QLineEdit" name="MdTdimz"/>
+       </item>
+       <item row="0" column="3">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Dimensions</string>
          </property>
         </widget>
        </item>
@@ -1271,7 +1273,7 @@
        <item>
         <widget class="QPushButton" name="PCPBGenG">
          <property name="text">
-          <string>Generate G Code</string>
+          <string>G-Code Gen</string>
          </property>
         </widget>
        </item>
@@ -1284,6 +1286,173 @@
        </item>
       </layout>
      </widget>
+    </widget>
+    <widget class="QWidget" name="GCodeTab">
+     <attribute name="title">
+      <string>G-Code</string>
+     </attribute>
+     <widget class="QWidget" name="gridLayoutWidget_5">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>341</width>
+        <height>371</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_6">
+       <item row="4" column="0">
+        <widget class="QCheckBox" name="GCmodel">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked it insert in the G-Code file at the beginning a comment containing:&lt;/p&gt;&lt;p&gt;- model name&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Model data </string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QCheckBox" name="GCmachine">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked it insert in the G-Code file at the beginning a comment containing:&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;- Machine name&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Machine data</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QCheckBox" name="GCtp">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked it insert in the G-Code file at the beginning a comment containing:&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;- Strategy&lt;/p&gt;&lt;p&gt;- Direction&lt;/p&gt;&lt;p&gt;- Number of slice / Number of slices generated&lt;/p&gt;&lt;p&gt;- Slice height &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Tool Path data</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QCheckBox" name="GCtool">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked it insert in the G-Code file at the beginning a comment containing:&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;- Tool Name&lt;/p&gt;&lt;p&gt;- Tool shape&lt;/p&gt;&lt;p&gt;- Tool Diameter&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Tool Data</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QCheckBox" name="GCwp">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked it insert in the G-Code file at the beginning a comment containing:&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;- Work Piece dimensions&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>WorkPiece data</string>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="0">
+        <widget class="QCheckBox" name="GCverbose">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Insert into the code some comment :&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;- at the end of the preamble&lt;/p&gt;&lt;p&gt;- at the end of the postamble&lt;/p&gt;&lt;p&gt;- at the end of the pass in the path&lt;/p&gt;&lt;p&gt;- when the tool is raised a the safe height&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Verbose comment</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>35</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Gcode file basename </string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0">
+        <widget class="QCheckBox" name="GCdecimals">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the max number of decimals in the G-code (min 2, max 5)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Number of decimals</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLineEdit" name="GCT1"/>
+       </item>
+       <item row="9" column="1">
+        <widget class="QSpinBox" name="spinBox"/>
+       </item>
+       <item row="11" column="0">
+        <widget class="QCheckBox" name="GCview">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Diplay the generated Tool Path at the end of each Tool Path generation, close the window when you have done to generate the next Tool Path&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>View the generated Tool Path</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="horizontalLayoutWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>390</y>
+        <width>341</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QPushButton" name="GCPB1">
+         <property name="text">
+          <string>Gen. G-Code</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="GCPB2">
+         <property name="text">
+          <string>Save Settings</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="GCPB3">
+         <property name="text">
+          <string>PushButton</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <zorder>gridLayoutWidget_5</zorder>
+     <zorder>horizontalLayoutWidget_2</zorder>
+     <zorder>line_2</zorder>
     </widget>
     <widget class="QWidget" name="TaskTab">
      <attribute name="title">
@@ -1471,7 +1640,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="GWid">
      <property name="geometry">
@@ -1501,8 +1670,8 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>100</width>
-       <height>30</height>
+       <width>381</width>
+       <height>413</height>
       </rect>
      </property>
      <attribute name="label">
@@ -1553,16 +1722,25 @@
     <addaction name="menuInch"/>
     <addaction name="actionGCF"/>
    </widget>
-   <widget class="QMenu" name="menuAbout">
+   <widget class="QMenu" name="MenuShow">
     <property name="title">
-     <string>About</string>
+     <string>Show</string>
     </property>
-    <addaction name="actionAbout_Qt"/>
+    <addaction name="actionShow_display_window"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionHelp"/>
     <addaction name="actionAbout_EuroCAM"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout_Qt"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConfiguration"/>
-   <addaction name="menuAbout"/>
+   <addaction name="MenuShow"/>
+   <addaction name="menuHelp"/>
   </widget>
   <action name="actionOpen_Drawing">
    <property name="text">
@@ -1598,6 +1776,16 @@
   <action name="actionGCF">
    <property name="text">
     <string>G code filename</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
+   </property>
+  </action>
+  <action name="actionShow_display_window">
+   <property name="text">
+    <string>Show display window</string>
    </property>
   </action>
  </widget>

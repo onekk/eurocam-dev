@@ -17,6 +17,7 @@ def initUI(self):
     # Set the units in the QEditText Boxes 
     setUnit(self)
     
+    clearMdUI(self)
     popToolUI(self)
     popMachUI(self)
     popWPUI(self)
@@ -68,51 +69,31 @@ def toolPaint(self):
 
 
 def clearMdUI(self):
-    for Eobject in (self.WPGSBLDX, self.WPGSBUDX, self.WPGSBLDY, self.WPGSBUDY,
-                    self.WPGSBLDZ,self.WPGSBUDZ):
-        Eobject.setValue(0.0)
+    for obj in (self.MdTmX, self.MdTmY, self.MdTmZ,
+                    self.MdTMX, self.MdTMY, self.MdTMZ,
+                    self.MdTdimx, self.MdTdimy, self.MdTdimz):
+        obj.setText("")
+        obj.setReadOnly(True)
+        obj.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
 
-    self.WPGCBMat.setCurrentIndex(0)  
-    self.WPGTNote.setText("")    
-
-
-def writeMddata(self,key):
-    data = glb.WorkPCs[key]    
-
-    for idx,Eobject in enumerate((self.WPGSBLDX, self.WPGSBUDX, self.WPGSBLDY,
-                                  self.WPGSBUDY, self.WPGSBLDZ,self.WPGSBUDZ)):
-        Eobject.setValue(float(data[idx]))
-    self.WPGCBMat.setCurrentIndex(int(data[6]))  
-    self.WPGTNote.setText(data[7])    
-
-
-def mdMask(self,mskst):
-    for f_object in (self.WPGSBLDX, self.WPGSBLDY, self.WPGSBLDZ, self.WPGSBUDX,
-                     self.WPGSBUDY, self.WPGSBUDZ, self.WPGTNote):
-        f_object.setReadOnly(mskst)
-
-def initMdCB(self):
-    # populate the Workpiece ComboBox
-    self.WPCB.clear()
-    self.WPCB.addItems(sorted(glb.WorkPCs.keys()))
-    self.PCWPCB.clear()
-    self.PCWPCB.addItems(sorted(glb.WorkPCs.keys()))
-
-def greyMdB(self,action):
-    self.WPNewPB.setVisible(action)    
-    self.WPModPB.setVisible(action)
-    self.WPDelPB.setVisible(action)
-    self.WPCB.setEnabled(action)
-    self.WPConfPB.setVisible(not action)
-    self.WPConfPB.setEnabled(not action)
-
-
-def popMdUI(self):
-    wpMask(self,True)
-    initWPCB(self)
-    wpConstraint(self)
-    greyWPB(self,True)
-
+def writeMddata(self,dims):
+        dimx,dimy,dimz = dims    
+        if glb.unit == 0 :
+            dimformat="{0:10.3f}"
+        elif glb.unit == 1:
+            dimformat = "{0:10.4f}"
+        else:
+            dimformat = "{0:6.3f}"
+            
+        self.MdTmX.setText(dimformat.format(dimx.min))        
+        self.MdTmY.setText(dimformat.format(dimy.min))
+        self.MdTmZ.setText(dimformat.format(dimz.min))         
+        self.MdTMX.setText(dimformat.format(dimx.max))        
+        self.MdTMY.setText(dimformat.format(dimy.max))
+        self.MdTMZ.setText(dimformat.format(dimz.max))
+        self.MdTdimx.setText(dimformat.format(dimx.max-dimx.min))        
+        self.MdTdimy.setText(dimformat.format(dimy.max-dimy.min))
+        self.MdTdimz.setText(dimformat.format(dimz.max-dimz.min))
 
 ################## Tool UI 
 
