@@ -109,6 +109,9 @@ feedrate = [] # xy,z values of feedrate used for Process calculation
 # f_tooltable # see upper
 # f_wptable # see upper
 
+## G
+gcodec = []   # Hold the preferences for the G-Code file generation
+
 ## I
 
 # inifile     # see upper

@@ -98,7 +98,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.WPDelPB.clicked.connect(self.wpDel)
         self.WPConfPB.clicked.connect(self.wpConf)     
 
-        #Binding for Process Tab
+        # Binding for Process Tab
 
         self.connect(self.PCMachCB, QtCore.SIGNAL('activated(QString)'), self.pc_mach_chosen)
         self.connect(self.PCToolCB, QtCore.SIGNAL('activated(QString)'), self.pc_tool_chosen)
@@ -111,6 +111,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.PCSBXYovl.valueChanged.connect(self.pc_SBXYovl_uV)    
         #self.PCSBSdc.valueChanged.connect(self.pc_SB_uV)    
         #self.PCSBOvl.valueChanged.connect(self.pc_Ovl_uV)    
+        
+        # Binding for the G-Code Tab
+        self.GCPB1.clicked.connect(self.genNGC)
+        self.GCPB2.clicked.connect(self.saveNGCP)            
         
         self.md = None # create a void reference for the model
                        # display window otherwise it will be destroyed
@@ -218,8 +222,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
              <b> https://code.google.com/p/visvis </b> <br> <br>\
              - the great OpenCAMlib Library by Anders Wallins <br>\
              see <b> https://github.com/aewallin/opencamlib</b><br><br> The \
-             exact version of OpenCamlib and the underlining VTK version, can\
-             be seen in the top comment of the generated G-Code files </p> \
+             exact version of OpenCamlib could be seen in the top comment of \
+             the generated G-Code files </p> \
              ").format(glb.version, PS_Ver, QtCore.__version_info__, 
                        QtCore.qVersion())
         
@@ -1009,8 +1013,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def pc_genG(self):
         self.MainTab.setCurrentIndex(5)
+        EC_UA.greyGC(self,True)        
         self.GCPB1.setVisible(True)
-        self.GCPB2.setVisible(True)
+        #self.GCPB2.setVisible(True)
     
 
     def pc_calc_task(self):
@@ -1058,19 +1063,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     ################################################
 
 
-    def GenNGC(self):
+    def genNGC(self):
+        self.readGCChB()
         # the filename has to be "pathgen.ini" because it is hardcoded
         # in ec_tpath.py as the input file
         p_fname = "./pathgen.ini"
         EC_L.writePathfile(self,p_fname,"ngc")
+        return # FIXME eliminare dopo i test
         # call the external program to generate Gcode    
         call(["python","ec_tpath.py"]) #if in same directory, else get abs path 
 
-    def ReadCheckBox(self):
+    def readGCChB(self):
         # TODO read the checkboxes and set the variables to generate the G-Code
-        #        
-        pass
+        glb.gcodec = []
+        for obj in (self.GCmodel, self.GCmachine, self.GCtool, self.GCwp,
+                    self.GCtp, self.GCverbose, self.GCview):
+            glb.gcodec.append(obj.isChecked())
 
+        glb.gcodec.append(self.GCSBd.value())        
+        # retrieve the content of the decimal SB self.GCdecimals       
+        print glb.gcodec    
+
+    def saveNGCP(self):
+        print "Save NGC pressed"
 
     ################################################
     #                                              #

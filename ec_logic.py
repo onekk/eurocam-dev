@@ -171,7 +171,6 @@ def writePathfile(self,p_fname,action):
     # the program modifying the pathgen.ini file
     config.add_section('General')
     config.set("General","debug",str(0))       
-    config.set("General","visualize",str(1))
     config.set("General","ec_version",str(glb.version))
         
     config.add_section('Tool')
@@ -219,8 +218,43 @@ def writePathfile(self,p_fname,action):
 
     config.add_section('G-Code')
     # Control G-Code file output
-    config.set("G-Code", "info","all")    
-           
+    if glb.gcodec[0] is True: # GCmodel
+        config.set("G-Code", "model","1")
+    else:
+        config.set("G-Code", "model","0")
+
+    if glb.gcodec[1] is True: # GCmachine
+        config.set("G-Code", "machine","1")
+    else:
+        config.set("G-Code", "machine","0")
+        
+    if glb.gcodec[2] is True: # GCtool
+        config.set("G-Code", "tool","1")
+    else:
+        config.set("G-Code", "tool","0")
+        
+    if glb.gcodec[3] is True: # GCwp
+        config.set("G-Code", "workp","1")
+    else:
+        config.set("G-Code", "workp","0")
+        
+    if glb.gcodec[4] is True: # GCtp
+        config.set("G-Code", "toolpath","1")
+    else:
+        config.set("G-Code", "toolpath","0")        
+
+    if glb.gcodec[5] is True: # GCverbose
+        config.set("G-Code", "verbose","1")
+    else:
+        config.set("G-Code", "verbose","0") 
+
+    if glb.gcodec[6] is True: # GCview
+        config.set("G-Code", "view","1")
+    else:
+        config.set("G-Code", "view","0")
+
+    config.set("G-Code", "decimals", str(glb.gcodec[7]))
+               
     with open(p_fname, 'wb') as configfile:
         config.write(configfile)                
             

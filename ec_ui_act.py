@@ -508,15 +508,13 @@ def popPCdata(self):
 def initGCUI(self):
     # disable the checkbox 
     greyGC(self,False)
-    self.GCT1.setEnabled(False)
 
     for obj in (self.GCPB1, self.GCPB2, self.GCPB3 ):
         obj.setVisible(False)        
  
 def greyGC(self,action):
     for obj in (self.GCmodel, self.GCmachine, self.GCtool, self.GCwp, 
-                self.GCtp, self.GCverbose, self.GCdecimals, self.GCview, 
-                self.GCSBd):
+                self.GCtp, self.GCverbose, self.GCview, self.GCSBd):
         obj.setEnabled(action)
    
 ###################

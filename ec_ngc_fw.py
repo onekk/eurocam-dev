@@ -1,7 +1,12 @@
-###################################
-# very simple G-code writer.
-# Anders Wallin 2012
-# Carlo Dormeletti 2015
+###########################
+#                         #
+# simple G-code writer.   #
+# Anders Wallin 2012      #
+# Carlo Dormeletti 2015   #
+#                         #
+###########################
+
+
 
 def fileopen(filename):
     global ncout
@@ -30,7 +35,6 @@ def xy_arc_to( x,y, r, cx,cy, cw ):
     else:
         f_line = "G3 X% 8.5f Y% 8.5f R% 8.5f" % (x, y, r)
     # FIXME: optional IJK format arcs
-    print f_line    
     
 def xy_rapid_to(x,y):
     f_line = "G0 X{:.4f} Y{:.4f}\n".format(x, y)

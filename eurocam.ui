@@ -1301,7 +1301,7 @@
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_6">
-       <item row="4" column="0">
+       <item row="2" column="0">
         <widget class="QCheckBox" name="GCmodel">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked it insert in the G-Code file at the beginning a comment containing:&lt;/p&gt;&lt;p&gt;- model name&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1311,7 +1311,7 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
+       <item row="3" column="0">
         <widget class="QCheckBox" name="GCmachine">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked it insert in the G-Code file at the beginning a comment containing:&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;- Machine name&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1321,7 +1321,7 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
+       <item row="6" column="0">
         <widget class="QCheckBox" name="GCtp">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked it insert in the G-Code file at the beginning a comment containing:&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;- Strategy&lt;/p&gt;&lt;p&gt;- Direction&lt;/p&gt;&lt;p&gt;- Number of slice / Number of slices generated&lt;/p&gt;&lt;p&gt;- Slice height &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1331,7 +1331,7 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="0">
+       <item row="4" column="0">
         <widget class="QCheckBox" name="GCtool">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked it insert in the G-Code file at the beginning a comment containing:&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;- Tool Name&lt;/p&gt;&lt;p&gt;- Tool shape&lt;/p&gt;&lt;p&gt;- Tool Diameter&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1341,7 +1341,7 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="0">
+       <item row="5" column="0">
         <widget class="QCheckBox" name="GCwp">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked it insert in the G-Code file at the beginning a comment containing:&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;- Work Piece dimensions&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1351,7 +1351,7 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="0">
+       <item row="8" column="0">
         <widget class="QCheckBox" name="GCverbose">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Insert into the code some comment :&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;- at the end of the preamble&lt;/p&gt;&lt;p&gt;- at the end of the postamble&lt;/p&gt;&lt;p&gt;- at the end of the pass in the path&lt;/p&gt;&lt;p&gt;- when the tool is raised a the safe height&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1361,57 +1361,36 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="enabled">
-          <bool>true</bool>
+       <item row="7" column="1">
+        <widget class="QSpinBox" name="GCSBd">
+         <property name="minimum">
+          <number>2</number>
          </property>
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
+         <property name="maximum">
+          <number>5</number>
          </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>35</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Gcode file basename </string>
+         <property name="value">
+          <number>4</number>
          </property>
         </widget>
        </item>
        <item row="9" column="0">
-        <widget class="QCheckBox" name="GCdecimals">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the max number of decimals in the G-code (min 2, max 5)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Number of decimals</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLineEdit" name="GCT1"/>
-       </item>
-       <item row="9" column="1">
-        <widget class="QSpinBox" name="GCSBd"/>
-       </item>
-       <item row="11" column="0">
         <widget class="QCheckBox" name="GCview">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Diplay the generated Tool Path at the end of each Tool Path generation, close the window when you have done to generate the next Tool Path&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>View the generated Tool Path</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Number of decimals </string>
+         </property>
+         <property name="indent">
+          <number>25</number>
          </property>
         </widget>
        </item>
@@ -1637,15 +1616,15 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="GWid">
      <property name="geometry">
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>98</width>
-       <height>28</height>
+       <width>381</width>
+       <height>413</height>
       </rect>
      </property>
      <attribute name="label">
@@ -1657,7 +1636,7 @@
         <x>0</x>
         <y>0</y>
         <width>381</width>
-        <height>391</height>
+        <height>421</height>
        </rect>
       </property>
      </widget>
@@ -1680,7 +1659,7 @@
         <x>0</x>
         <y>0</y>
         <width>381</width>
-        <height>381</height>
+        <height>431</height>
        </rect>
       </property>
      </widget>

@@ -8,7 +8,6 @@ import os
 import math
 import ocl        # https://github.com/aewallin/opencamlib
 import camvtk_mod as camvtk     # ocl helper library for VTK version > 5
-import ec_ngc_fw as ngc_fw      # G-code output file is produced by this module
 import ConfigParser
 
 import ec_visu as ECV
@@ -21,18 +20,19 @@ debug = 0
 dims =[]
 show_path = 0
 version = "0.1.0 Alpha"
+ncout = None
 
 def trace():
     global machine, t_name, t_shape, diameter, feedrate, plungerate, \
            safe_height, preamble, postamble, debug, show_path, dims, \
-           slices, ec_version    
+           slices, ec_version, gcmodel, gcmachine, gctool, gcworkp, \
+           gctoolp, gcverbose, gcdecimal, ncout     
      
     config = ConfigParser.SafeConfigParser()
     config.read("./pathgen.ini")
     if config.sections() is not []:
         
         debug = int(config.get("General","debug"))
-        show_path = int(config.get("General","visualize"))
         ec_version = config.get("General","ec_version") 
         
         # Tool data
@@ -80,8 +80,15 @@ def trace():
         for s_index in xrange(1,slices+1):
             zslices.append(float(config.get("Path","slice-{}".format(s_index))))
 
-        ngcout = config.get("G-Code","info")
-
+        gcmodel = int(config.get("G-Code","model"))
+        gcmachine = int(config.get("G-Code","machine"))
+        gctool = int(config.get("G-Code","tool")) 
+        gcworkp = int(config.get("G-Code","workp"))        
+        gctoolp = int(config.get("G-Code","toolpath"))   
+        gcverbose = int(config.get("G-Code","verbose")) 
+        show_path = int(config.get("G-Code","view"))
+        gcdecimal = int(config.get("G-Code","decimals"))
+        
     else:
         print "file vuoto"
 
@@ -297,52 +304,100 @@ def filterCLPaths(cl_paths, tolerance=0.001):
 
 
 def write_gcode_file(filename,sourcefile, z_h, count, toolpath):
-    # uses ngc_fw and writes G-code to file
+    global ncout    
     modelname = os.path.basename(sourcefile)
-    ngc_fw.fileopen(filename)
-    ngc_fw.safe_height = safe_height   # XY rapids at this height
-    ngc_fw.feedrate = feedrate         # feedrate
-    ngc_fw.plungerate = plungerate     # plungrate
-    
-    ngc_fw.comment( "TPath Version      : {0}".format(version))    
-    ngc_fw.comment( "EuroCAM            : {0}".format(ec_version)) 
-    ngc_fw.comment( "OpenCAMLib version : {0}".format(ocl.version()))
-    ngc_fw.comment( "Generated on date {0}".format(time.strftime("%c")))
-    ngc_fw.comment( "STL surface file : {0}".format(modelname))
-    ngc_fw.comment( "Machine Name  : {0}".format(machine))
-    ngc_fw.comment( "Tool name     : {0}".format(t_name))
-    ngc_fw.comment( "Tool shape    : {0}".format(t_shape))
-    ngc_fw.comment( "Tool diameter : {0:.4}".format(diameter))
-    ngc_fw.comment( "WorkPiece dimension ")
-    ngc_fw.comment( "xmin = {0:12.4f} xmax = {1:12.4f}".format(dims[0], dims[1]))    
-    ngc_fw.comment( "ymin = {0:12.4f} ymax = {1:12.4f}".format(dims[2], dims[3]))
-    ngc_fw.comment( "zmin = {0:12.4f} zmax = {1:12.4f}".format(dims[4], dims[5]))        
-    ngc_fw.comment( "Strategy      : {0}".format("strat"))
-    ngc_fw.comment( "Direction     : {0} ".format("None")) 
-    ngc_fw.comment( "Slice N. {0} of {1}".format(count,slices))    
-    ngc_fw.comment( "Slice height  : {0:.4}".format(z_h))
+    ncout = open(filename,'w')    
 
-    ngc_fw.filewrite(preamble+"\n")
-    ngc_fw.comment( " End of preamble ")    
+    
+    comment( "TPath Version      : {0}".format(version))    
+    comment( "EuroCAM            : {0}".format(ec_version)) 
+    comment( "OpenCAMLib version : {0}".format(ocl.version()))
+    comment( "Generated on date {0}".format(time.strftime("%c")))
+    if gcmodel == 1:    
+        comment( "STL surface file : {0}".format(modelname))
+
+    if gcmachine == 1:    
+        comment( "Machine Name  : {0}".format(machine))
+
+    if gctool == 1:
+        comment( "Tool name     : {0}".format(t_name))
+        comment( "Tool shape    : {0}".format(t_shape))
+        comment( "Tool diameter : {0:.4}".format(diameter))
+
+    if gcworkp == 1:
+        comment( "WorkPiece dimension ")
+        comment( "xmin = {0:12.4f} xmax = {1:12.4f}".format(dims[0], dims[1]))    
+        comment( "ymin = {0:12.4f} ymax = {1:12.4f}".format(dims[2], dims[3]))
+        comment( "zmin = {0:12.4f} zmax = {1:12.4f}".format(dims[4], dims[5]))        
+
+    if gctoolp == 1:
+        comment( "Strategy      : {0}".format("strat"))
+        comment( "Direction     : {0} ".format("None")) 
+        comment( "Slice N. {0} of {1}".format(count,slices))    
+        comment( "Slice height  : {0:.4}".format(z_h))
+
+    ncout.write(preamble+"\n")
+    
+    if gcverbose == 1:
+        comment( " End of preamble ")    
+
     #TODO modify this behaviuor
     for path in toolpath:
-        ngc_fw.pen_up()
+        pen_up()
         first_pt = path[0]
-        ngc_fw.xy_rapid_to( first_pt.x, first_pt.y)
-        ngc_fw.pen_down(first_pt.z)
+        xy_rapid_to( first_pt.x, first_pt.y)
+        pen_down(first_pt.z)
         for p in path[1:]:
-            ngc_fw.line_to(p.x,p.y,p.z)
-        if debug == 1:        
-            ngc_fw.comment("end of path")
-    ngc_fw.comment( " Start postamble ") 
+            line_to(p.x,p.y,p.z)
+        if gcverbose == 1:        
+            comment("end of path")
+
+    if gcverbose == 1:
+        comment( " Start postamble ") 
     # write postamble        
-    ngc_fw.filewrite(postamble+"\n")
+    ncout.write(postamble+"\n")
     # close the file
-    ngc_fw.fileclose()
+    ncout.close()
+
+def line_to(x,y,z):
+    f_line = "G1 X{:.4f} Y{:.4f} Z{:.4f} F{:.0f}\n".format(x, y, z, feedrate)
+    ncout.write(f_line)
     
- 
+def xy_line_to(x,y):
+    f_line = "G1 X{:.4f} Y{:.4f}\n".format(x, y)
+    ncout.write(f_line)
+    
+# (endpoint, radius, center, cw?)
+def xy_arc_to( x,y, r, cx,cy, cw ):
+    if (cw):
+        f_line = "G2 X% 8.5f Y% 8.5f R% 8.5f" % (x, y, r)
+    else:
+        f_line = "G3 X% 8.5f Y% 8.5f R% 8.5f" % (x, y, r)
+    # FIXME: optional IJK format arcs
+    
+def xy_rapid_to(x,y):
+    f_line = "G0 X{:.4f} Y{:.4f}\n".format(x, y)
+    ncout.write(f_line)
 
+def pen_up():
+    f_line = "G0 Z {:.4f}\n".format(safe_height)
+    ncout.write(f_line)
 
+def pen_down(z=0):
+    #f_line = "G0 Z {:.4f}\n".format(z)
+    #filewrite(f_line)
+    comment("plunge pass")
+    plunge(z)
+
+def plunge(z):
+    f_line =  "G1 Z {:.4f} F{:.0f}\n".format(z, plungerate)
+    ncout.write(f_line)
+    
+def comment(s=""):
+    s1 = s.replace("(", "<")
+    s2 = s1.replace(")",">")
+    f_line = "( {} )\n".format(s2)
+    ncout.write(f_line)
 
        
 if __name__ == "__main__":
