@@ -1,13 +1,12 @@
 # Eurocam Toolpath Generation Program
 # (c) Dormeletti Carlo 2015 
-# some routine is derived from
-# Anders Wallin code (c) 2014 
+# some routines are based on work of Anders Wallin code (c) 2014 
 
 import time
 import os
 import math
-import ocl        # https://github.com/aewallin/opencamlib
-import camvtk_mod as camvtk     # ocl helper library for VTK version > 5
+import ocl                   # https://github.com/aewallin/opencamlib
+import camvtk_mod as camvtk  # ocl helper library for VTK version > 5
 import ConfigParser
 
 import ec_visu as ECV
@@ -19,14 +18,13 @@ t_name = ""
 debug = 0
 dims =[]
 show_path = 0
-version = "0.1.0 Alpha"
-ncout = None
+version = "0.2.0 Alpha"
 
 def trace():
     global machine, t_name, t_shape, diameter, feedrate, plungerate, \
            safe_height, preamble, postamble, debug, show_path, dims, \
            slices, ec_version, gcmodel, gcmachine, gctool, gcworkp, \
-           gctoolp, gcverbose, gcdecimal, ncout     
+           gctoolp, gcverbose, gcdecimal     
      
     config = ConfigParser.SafeConfigParser()
     config.read("./pathgen.ini")
@@ -99,7 +97,7 @@ def trace():
     # 0 = "cylinder" CylCutter(diameter, length)
     # 1 = "sphere"   BallCutter(diameter, length)
     # 2 = "toroid"   BullCutter(diameter, corner_radius, length)
-    # 3 = "cone"     ConeCutter(diameter, angle, length)
+    # 3 = "cone"     ConeCutter(diameter, half angle in radians, length)
 
     if shape == 0:
         cutter = ocl.CylCutter(diameter, length)
@@ -108,8 +106,12 @@ def trace():
     elif shape == 2: 
         cutter = ocl.BullCutter(diameter, radius, length)
     elif shape == 3: 
-        angle = math.pi/4 #TODO what is the unit for angle?
-        cutter = ocl.ConeCutter(diameter, angle, length)
+        # The angle is the half angle of the cone (90 deg in radians is pi/2)
+        # becoming pi/2 * 1/2 = pi/4
+        # the conversion between radinas and degree is degree * pi/180 so the
+        # formula (radius *pi)/360
+        rangle = (radius * math.pi)/360  
+        cutter = ocl.ConeCutter(diameter, rangle, length)
     elif shape == 4: 
         cutter = cutter.offsetCutter(diameter)
 
@@ -120,20 +122,19 @@ def trace():
     xdim = xmax - xmin
     if dircut == "Y":
         passes = ydim/step
-        Ny= int(math.ceil(passes)) #number of lines in the y-direction
+        Ny = int(math.ceil(passes)) #number of lines in the y-direction
         paths = YdirectionZigPath(dims,Ny)
     elif dircut =="X":
         passes = xdim/step
-        Nx= int(math.ceil(passes)) #number of lines in the x-direction
+        Nx = int(math.ceil(passes)) #number of lines in the x-direction
         paths = XdirectionZigPath(dims,Nx)
     else:
         print "Default values used for test"
         paths = YdirectionZigPath(dims,6)
 
-    t_path = time.time() - t_before
-
-    if debug  == 1:      
-        print "prima di adaptive dropcutter = > ", t_path
+    if debug > 0:
+        t_path = time.time() - t_before        
+        print "Tempo di calcolo del path prima di APDC = > ", t_path
 
    # now project onto the STL surface
     t_before = time.time()
@@ -141,14 +142,16 @@ def trace():
     surface = STLSurfaceSource(stlfile)    
 
     (raw_toolpath, n_raw) = adaptive_path_drop_cutter(surface,cutter,paths,zmin)
-    t1 = time.time() - t_before
-    if debug == 1:
-        print " Calcolo adpc ",t1," N punti = ",n_raw
+
+    if debug > 0:
+        t1 = time.time() - t_before
+        print "Tempo di calcolo di APDC {0} N punti {1}".format(t1,n_raw)
 
     # filter raw toolpath to reduce size
     tolerance = 0.001
     (fil_tps, n_filtered) = filterCLPaths(raw_toolpath, tolerance)
-    if debug  == 1: 
+
+    if debug  > 0: 
         print " Punti dopo filtro = ",n_filtered
 
     toolpaths = fil_tps
@@ -157,20 +160,22 @@ def trace():
         toolpaths = sliceCLPaths(fil_tps,tolerance,z_h)
         if action == "ngc":
             count = count + 1
-            suffix = "-s" + str(count) + "o" + str(slices) 
-            filename = "".join((basename,suffix,".ngc"))
-            if debug == 1:
+            ep = time.strftime("%Y%j%H%M")
+            filename = "".join((basename,"-",ep,"-s",str(count),"o",str(slices),".ngc"))
+
+            if debug > 0:
                 print "Generating filename = ", os.path.basename(filename)
+
             write_gcode_file(filename, stlfile,z_h, count, toolpaths)
         else:
             pass
 
         if show_path == 1:
-            ECV.vtk_visualize_toolpath(stlfile, toolpaths)
+            ECV.vtk_visualize_toolpath(stlfile, toolpaths, safe_height,zmax)
 
 # create a simple "Zig" pattern where we cut only in one direction.
-# the first line is at ymin
-# the last line is at ymax
+# the first line is at ymin, the last line is at ymax
+
 def YdirectionZigPath(dims,Ny):
     paths = []
     xmin = dims[0]
@@ -203,10 +208,10 @@ def XdirectionZigPath(dims,Nx):
     ymax = dims[3]
     zmin = dims[4]
     zmax = dims[5]    
-    dx = float(xmax-xmin)/(Nx-1)  # the y step-over
+    dx = float(xmax-xmin)/(Nx-1)  # the x step-over
     for n in xrange(0,Nx):
         path = ocl.Path()
-        x = xmin+n*dx              # current y-coordinate
+        x = xmin+n*dx             # current x-coordinate
         if (n==Nx-1):
             assert( x==xmax)
         elif (n==0):
@@ -219,19 +224,22 @@ def XdirectionZigPath(dims,Nx):
         paths.append(path)
     return paths
 
-# run the actual drop-cutter algorithm
+
 def adaptive_path_drop_cutter(surface, cutter, paths,z_h):
     apdc = ocl.AdaptivePathDropCutter()
     apdc.setSTL(surface)
     apdc.setCutter(cutter)
-    apdc.setSampling(0.04)      # maximum sampling or "step-forward" distance
-                                # should be set so that we don't loose any detail of the STL model
-                                # i.e. this number should be similar or smaller than the smallest triangle
-    apdc.setMinSampling(0.01) # minimum sampling or step-forward distance
-                              # the algorithm subdivides "steep" portions of the toolpath
-                              # until we reach this limit.
+    apdc.setSampling(0.04)   # maximum sampling or "step-forward" distance
+                             # should be set so that we don't loose any 
+                             # detail of the STL model i.e. this number 
+                             # should be similar or smaller than the
+                             # smallest triangle
+    apdc.setMinSampling(0.01)  # minimum sampling or step-forward distance
+                               # the algorithm subdivides "steep" portions of 
+                               # the toolpath until we reach this limit.
     apdc.setZ(z_h)
-    print apdc.getZ()                            
+    if debug > 0:
+        print "Apdc zmin = {0:.4f}".format(apdc.getZ())                            
     cl_paths=[]
     n_points=0
     for path in paths:
@@ -242,9 +250,14 @@ def adaptive_path_drop_cutter(surface, cutter, paths,z_h):
         cl_paths.append( apdc.getCLPoints() )
     return (cl_paths, n_points)
 
-# this could be any source of triangles
-# as long as it produces an ocl.STLSurf() we can work with
+
 def STLSurfaceSource(filename):
+    ''' STLSurfaceSource(filename) 
+
+   this could be any source of triangles as long as it produces an 
+   ocl.STLSurf() we can work with
+   
+    '''
     if debug  == 1: 
         print filename
     stl = camvtk.STLSurf(filename)
@@ -285,14 +298,17 @@ def sliceCLPaths(paths,tol,z_h):
     return sliced_paths
 
 
-
-# to reduce the G-code size we filter here. (this is not strictly required and could be omitted)
-# we could potentially detect G2/G3 arcs here, if there was a filter for that.
-# idea:
-# if a path in the raw toolpath has three points (p1,p2,p3)
-# and point p2 lies within tolerance of the straight line p1-p3
-# then we simplify the path to (p1,p3)
 def filterCLPaths(cl_paths, tolerance=0.001):
+    ''' filterCLPaths(cl_paths, tolerance=0.001)
+    
+    to reduce the G-code size we filter here. (this is not strictly required
+    and could be omitted)
+    we could potentially detect G2/G3 arcs here, if there was a filter for that.
+    idea:
+    if a path in the raw toolpath has three points (p1,p2,p3)
+    and point p2 lies within tolerance of the straight line p1-p3
+    then we simplify the path to (p1,p3)
+    '''
     cl_filtered_paths = []
     n_filtered=0
     for cl_path in cl_paths:
@@ -304,69 +320,97 @@ def filterCLPaths(cl_paths, tolerance=0.001):
 
 
 def write_gcode_file(filename,sourcefile, z_h, count, toolpath):
-    global ncout    
+    global gcdecimal
     modelname = os.path.basename(sourcefile)
     ncout = open(filename,'w')    
 
-    
-    comment( "TPath Version      : {0}".format(version))    
-    comment( "EuroCAM            : {0}".format(ec_version)) 
-    comment( "OpenCAMLib version : {0}".format(ocl.version()))
-    comment( "Generated on date {0}".format(time.strftime("%c")))
+    dplaces = "".join((":0",str(gcdecimal+5) ,".",str(gcdecimal),"f"))
+
+    wpd1 = "".join(("xmin = {0", dplaces, "} xmax = {1", dplaces, "}\n"))    
+    wpd2 = "".join(("ymin = {0", dplaces, "} ymax = {1", dplaces, "}\n"))
+    wpd3 = "".join(("zmin = {0", dplaces, "} zmax = {1", dplaces, "}\"))
+
+    ncout.write(comment("TPath version      : {0}".format(version)))
+    ncout.write(comment("EuroCAM version    : {0}".format(ec_version))) 
+    ncout.write(comment("OpenCAMLib version : {0}".format(ocl.version())))
+    ncout.write(comment("Generated on date {0}".format(time.strftime("%c"))))
     if gcmodel == 1:    
-        comment( "STL surface file : {0}".format(modelname))
+        ncout.write(comment("STL surface file : {0}".format(modelname)))
 
     if gcmachine == 1:    
-        comment( "Machine Name  : {0}".format(machine))
+        ncout.write(comment("Machine name  : {0}".format(machine)))
 
     if gctool == 1:
-        comment( "Tool name     : {0}".format(t_name))
-        comment( "Tool shape    : {0}".format(t_shape))
-        comment( "Tool diameter : {0:.4}".format(diameter))
+        ncout.write(comment("Tool name     : {0}".format(t_name)))
+        ncout.write(comment("Tool shape    : {0}".format(t_shape)))
+        ncout.write(comment("Tool diameter : {0:.4}".format(diameter)))
 
     if gcworkp == 1:
-        comment( "WorkPiece dimension ")
-        comment( "xmin = {0:12.4f} xmax = {1:12.4f}".format(dims[0], dims[1]))    
-        comment( "ymin = {0:12.4f} ymax = {1:12.4f}".format(dims[2], dims[3]))
-        comment( "zmin = {0:12.4f} zmax = {1:12.4f}".format(dims[4], dims[5]))        
+        ncout.write("( Work Piece dimensions )")
+        ncout.write(wpd1.format(dims[0], dims[1]))    
+        ncout.write(wpd2.format(dims[2], dims[3]))
+        ncout.write(wpd3.format(dims[4], dims[5]))       
 
     if gctoolp == 1:
-        comment( "Strategy      : {0}".format("strat"))
-        comment( "Direction     : {0} ".format("None")) 
-        comment( "Slice N. {0} of {1}".format(count,slices))    
-        comment( "Slice height  : {0:.4}".format(z_h))
+        ncout.write(comment("Strategy      : {0}".format("strat")))
+        ncout.write(comment("Direction     : {0} ".format("None"))) 
+        ncout.write(comment("Slice N. {0} of {1}".format(count,slices)))    
+        ncout.write(comment("Slice height  : {0:.4}".format(z_h)))
 
     ncout.write(preamble+"\n")
     
     if gcverbose == 1:
-        comment( " End of preamble ")    
+        ncout.write("( End of preamble )")
 
-    #TODO modify this behaviuor
+    # the line is formed by four places a point and the number of decimal
+    # so it can have 9999.(number of decimals) and 9999 mm almost ten meters
+
+    gcwlrxy =  "".join(("G00 X{0", dplaces, "} Y{1", dplaces, "}\n"))
+    gcwlxyz =  "".join(("G01 X{0", dplaces, "} Y{1", dplaces , "} Z{2", dplaces,"}\n"))    
+    gcwpz = "".join(("Z{0",dplaces , "}\n"))
+    # This beahviour assume that the first point is a rapid and to the x,y pos
+    # and the plunge down on the z axis at the specified plunge rate
+    # so it is taylored on the Zig alghoritm
+    # TODO take in account if the tools is not center cut to move past the wp
+    # limits
+    # TODO defining an enter strategy on the wp to reduce the wearing of the tool
+    npath = 1
+    if debug > 0:
+        print "Toolpath is composed of {0} path".format(len(toolpath))
     for path in toolpath:
-        pen_up()
-        first_pt = path[0]
-        xy_rapid_to( first_pt.x, first_pt.y)
-        pen_down(first_pt.z)
-        for p in path[1:]:
-            line_to(p.x,p.y,p.z)
         if gcverbose == 1:        
-            comment("end of path")
+            ncout.write("( Path {0} start )\n".format(str(npath)))        
+        # raise the tool at safe height
+        ncout.write("".join(("G00 Z{0",dplaces,"}\n")).format(safe_height))
+        # take out of the path the first point        
+        first_pt = path[0]
+        # move to the first point of the path (rapid move)
+        ncout.write(gcwlrxy.format(first_pt.x, first_pt.y))
+        if gcverbose == 1:
+            ncout.write("( rapid move )\n")
+   
+        # plunge down in the workpiece (NOTE if it is center cut)        
+        ncout.write("G01 F {0:.1f} \n".format(plungerate))
+        ncout.write(gcwpz.format(first_pt.z))
+        # set the feedrate
+        ncout.write("F {0:.1f} \n".format(feedrate))
+        for p in path[1:]:
+            ncout.write(gcwlxyz.format(p.x, p.y, p.z))
+        if gcverbose == 1:        
+            ncout.write("( Path {0} end )\n".format(str(npath)))
+        if debug > 0:
+            print "Path number ",npath
+        npath = npath + 1    
+    # return to the safe height at the end of the work
+    ncout.write("".join(("G00 Z{",dplaces,"}\n")).format(safe_height))
 
     if gcverbose == 1:
-        comment( " Start postamble ") 
+         ncout.write("( Start postamble )\n ") 
     # write postamble        
     ncout.write(postamble+"\n")
     # close the file
     ncout.close()
-
-def line_to(x,y,z):
-    f_line = "G1 X{:.4f} Y{:.4f} Z{:.4f} F{:.0f}\n".format(x, y, z, feedrate)
-    ncout.write(f_line)
-    
-def xy_line_to(x,y):
-    f_line = "G1 X{:.4f} Y{:.4f}\n".format(x, y)
-    ncout.write(f_line)
-    
+  
 # (endpoint, radius, center, cw?)
 def xy_arc_to( x,y, r, cx,cy, cw ):
     if (cw):
@@ -375,29 +419,12 @@ def xy_arc_to( x,y, r, cx,cy, cw ):
         f_line = "G3 X% 8.5f Y% 8.5f R% 8.5f" % (x, y, r)
     # FIXME: optional IJK format arcs
     
-def xy_rapid_to(x,y):
-    f_line = "G0 X{:.4f} Y{:.4f}\n".format(x, y)
-    ncout.write(f_line)
-
-def pen_up():
-    f_line = "G0 Z {:.4f}\n".format(safe_height)
-    ncout.write(f_line)
-
-def pen_down(z=0):
-    #f_line = "G0 Z {:.4f}\n".format(z)
-    #filewrite(f_line)
-    comment("plunge pass")
-    plunge(z)
-
-def plunge(z):
-    f_line =  "G1 Z {:.4f} F{:.0f}\n".format(z, plungerate)
-    ncout.write(f_line)
     
 def comment(s=""):
     s1 = s.replace("(", "<")
     s2 = s1.replace(")",">")
     f_line = "( {} )\n".format(s2)
-    ncout.write(f_line)
+    return f_line
 
        
 if __name__ == "__main__":

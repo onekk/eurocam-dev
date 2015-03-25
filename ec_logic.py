@@ -2,13 +2,8 @@
 """
 Created on Tue Feb 17 16:22:33 2015
 
-use some code from 
-simple parallel finish toolpath example
-Anders Wallin 2014-02-23
-
 @author: Carlo Dormeletti
 """
-
 
 import os
 import time

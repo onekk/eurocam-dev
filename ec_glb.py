@@ -10,7 +10,7 @@ import sys
 
 
 sversion = "0.4"
-version = sversion + ".1 Alpha"
+version = sversion + ".2 Alpha"
 
 debug = 3 # comment out to deactivate debug output
 

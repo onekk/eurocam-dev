@@ -5,9 +5,10 @@ Created on Tue Mar 10 19:34:26 2015
 @author: carlo-m
 """
 import ocl
+import datetime
 import camvtk_mod as camvtk
    
-def vtk_visualize_toolpath(stlfile, toolpaths):
+def vtk_visualize_toolpath(stlfile, toolpaths,rapid_height,feed_height):
     myscreen = camvtk.VTKScreen()
     stl = camvtk.STLSurf(stlfile)
     myscreen.addActor(stl)
@@ -17,8 +18,8 @@ def vtk_visualize_toolpath(stlfile, toolpaths):
     myscreen.camera.SetPosition(15, 13, 7)
     myscreen.camera.SetFocalPoint(5, 5, 0)
 
-    rapid_height= 5 # XY rapids at this height
-    feed_height = 3
+    myscreen.camera.Zoom(0.5)
+
     rapidColor = camvtk.pink
     XYrapidColor = camvtk.green
     plungeColor = camvtk.red
@@ -34,7 +35,8 @@ def vtk_visualize_toolpath(stlfile, toolpaths):
         first_pt = path[0]
         if (first == True): # green sphere at path start
             myscreen.addActor( camvtk.Sphere(center=(first_pt.x,first_pt.y,rapid_height) , radius=0.1, color=camvtk.green) )
-            pos = ocl.Point(first_pt.x,first_pt.y,first_pt.z) # at start of program, assume we have already a rapid move here
+            # at start of program, assume we have already a rapid move here
+            pos = ocl.Point(first_pt.x,first_pt.y,first_pt.z) 
             first = False
         else: # not the very first move
             # retract up to rapid_height
@@ -60,7 +62,13 @@ def vtk_visualize_toolpath(stlfile, toolpaths):
     myscreen.addActor( camvtk.Sphere(center=(pos.x,pos.y,rapid_height) , radius=0.1, color=camvtk.red) )
 
     camvtk.drawArrows(myscreen,center=(-0.5,-0.5,-0.5)) # XYZ coordinate arrows
-    camvtk.drawOCLtext(myscreen)
+
+
+    t = camvtk.Text()
+    t.SetPos( (myscreen.width-200, myscreen.height-100) )
+    date_text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    t.SetText( "EuroCAM \n " + date_text + "\n Using OpenCAMLib \n" )
+    myscreen.addActor(t)
     
     myscreen.render()
     myscreen.iren.Start()
