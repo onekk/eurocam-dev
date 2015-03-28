@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'eurocam.ui'
 #
-# Created: Wed Mar 25 01:05:35 2015
+# Created: Thu Mar 26 17:04:52 2015
 #      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -504,9 +504,9 @@ class Ui_MainWindow(object):
         self.PCPDRB4 = QtGui.QRadioButton(self.verticalLayoutWidget_2)
         self.PCPDRB4.setObjectName("PCPDRB4")
         self.verticalLayout_2.addWidget(self.PCPDRB4)
-        self.checkBox = QtGui.QCheckBox(self.PCPDir)
-        self.checkBox.setGeometry(QtCore.QRect(0, 130, 121, 20))
-        self.checkBox.setObjectName("checkBox")
+        self.PCCbidir = QtGui.QCheckBox(self.PCPDir)
+        self.PCCbidir.setGeometry(QtCore.QRect(0, 130, 121, 20))
+        self.PCCbidir.setObjectName("PCCbidir")
         self.gridLayout_4.addWidget(self.PCPDir, 4, 0, 1, 1)
         self.formLayout = QtGui.QFormLayout()
         self.formLayout.setSizeConstraint(QtGui.QLayout.SetNoConstraint)
@@ -727,7 +727,7 @@ class Ui_MainWindow(object):
         self.GV.setObjectName("GV")
         self.RightTB.addItem(self.GWid, "")
         self.TAL = QtGui.QWidget()
-        self.TAL.setGeometry(QtCore.QRect(0, 0, 381, 413))
+        self.TAL.setGeometry(QtCore.QRect(0, 0, 98, 28))
         self.TAL.setObjectName("TAL")
         self.TWid = QtGui.QTextBrowser(self.TAL)
         self.TWid.setGeometry(QtCore.QRect(0, 0, 381, 431))
@@ -782,7 +782,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuHelp.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.MainTab.setCurrentIndex(5)
+        self.MainTab.setCurrentIndex(4)
         self.MachNB.setCurrentIndex(0)
         self.RightTB.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -860,7 +860,7 @@ class Ui_MainWindow(object):
         self.PCPDRB2.setText(QtGui.QApplication.translate("MainWindow", "Y Dir", None, QtGui.QApplication.UnicodeUTF8))
         self.PCPDRB3.setText(QtGui.QApplication.translate("MainWindow", "Diagonal \\", None, QtGui.QApplication.UnicodeUTF8))
         self.PCPDRB4.setText(QtGui.QApplication.translate("MainWindow", "Diagonal /", None, QtGui.QApplication.UnicodeUTF8))
-        self.checkBox.setText(QtGui.QApplication.translate("MainWindow", "Bi Dir. Pass", None, QtGui.QApplication.UnicodeUTF8))
+        self.PCCbidir.setText(QtGui.QApplication.translate("MainWindow", "Bi Dir. Pass", None, QtGui.QApplication.UnicodeUTF8))
         self.PCLXYovl.setText(QtGui.QApplication.translate("MainWindow", "X Y Pass Incr", None, QtGui.QApplication.UnicodeUTF8))
         self.PCLZsd.setText(QtGui.QApplication.translate("MainWindow", "Z Step Down", None, QtGui.QApplication.UnicodeUTF8))
         self.PCLXYfc.setText(QtGui.QApplication.translate("MainWindow", "X Y Feedrate", None, QtGui.QApplication.UnicodeUTF8))

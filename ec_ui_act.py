@@ -24,7 +24,6 @@ def initUI(self):
     initPCUI(self)
     initGCUI(self)
     
-
         
 def setUnit(self):
     # set the Unit in the Tool Tab
@@ -463,7 +462,10 @@ def initPCUI(self):
     self.PCSB01.setVisible(False)    
     self.PCPBGenG.setVisible(False)
     self.PCPBCt.setVisible(False)     
-    self.PCPBCal.setVisible(False)   
+    self.PCPBCal.setVisible(False)
+    # FIXME eliminate after the necessary corrections
+    self.PCSTRB1.setChecked(True)
+    self.PCCbidir.setVisible(False)
     pcConstraint(self)
 
 def pcConstraint(self):

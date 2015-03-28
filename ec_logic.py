@@ -10,7 +10,7 @@ import time
 import math
 import ConfigParser
 
-import ec_ngc_fw  as ngc_fw # G-code output is produced by this module
+#import ec_ngc_fw  as ngc_fw # G-code output is produced by this module
 import ec_glb as glb 
 
 
@@ -148,7 +148,7 @@ def writePathfile(self,p_fname,action):
         if ret == "OK":
             pass
         else:
-            return
+            return "KO"
 
     m_name =  glb.PCData[0]       
     t_name = glb.PCData[1]
@@ -259,6 +259,8 @@ def writePathfile(self,p_fname,action):
         self.PCSBXYfc.setValue(xyfeed)
         zfeed = float(glb.machdata[5])
         self.PCSBZfc.setValue(zfeed)
+    
+    return "OK"    
           
 def calc_process(self):
         # TODO consider the material data

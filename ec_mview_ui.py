@@ -70,7 +70,8 @@ class Ui_ModelWindow(object):
         self.lmax = QtGui.QLabel(self.tW)        
         self.ldim = QtGui.QLabel(self.tW)
         self.loff = QtGui.QLabel(self.tW)
- 
+
+        self.labs = QtGui.QLabel(self.tW) 
 
         for obj in (self.lmin, self.lmax, self.ldim, self.loff):
             obj.setFont(font)            
@@ -85,7 +86,8 @@ class Ui_ModelWindow(object):
         self.lmin.setText('Min.')
         self.lmax.setText('Max')
         self.ldim.setText('Dim')        
-        self.loff.setText('Offset')    
+        self.loff.setText('Offset')
+        self.labs.setText('View Position')       
 
                  
     
@@ -114,7 +116,6 @@ class Ui_ModelWindow(object):
         self.vwpoy = QtGui.QLabel(self.tW)
         self.vwpoz = QtGui.QLabel(self.tW)
 
-
         
         for obj in (self.labx, self.laby, self.labz,
                     self.lwpx, self.lwpy, self.lwpz,
@@ -124,7 +125,8 @@ class Ui_ModelWindow(object):
                     self.vwpx, self.vwpy, self.vwpz,
                     self.vwpmx, self.vwpmy, self.vwpmz,
                     self.vwpMx, self.vwpMy, self.vwpMz,
-                    self.vwpox, self.vwpoy, self.vwpoz):
+                    self.vwpox, self.vwpoy, self.vwpoz,
+                    self.labs):
                         
             obj.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
             obj.setFont(font)
@@ -243,6 +245,8 @@ class Ui_ModelWindow(object):
         self.but3b = QtGui.QPushButton(self.tW)
         self.but3b.setText('Z back')
 
+        self.tL.addWidget(self.labs, 1, 14, 1, 2)     
+
         self.tL.addWidget(self.but1, 3, 15, 1, 1)         
         self.tL.addWidget(self.but2, 4, 15, 1, 1)
         self.tL.addWidget(self.but3, 5, 15, 1, 1)
@@ -287,12 +291,6 @@ class Ui_ModelWindow(object):
             obj.setFrameShape(QtGui.QFrame.VLine)
             obj.setFrameShadow(QtGui.QFrame.Sunken)
       
-
-        self.line6 = QtGui.QFrame(self.vLW)
-        self.line6.setFrameShape(QtGui.QFrame.VLine)
-        self.line6.setFrameShadow(QtGui.QFrame.Sunken)
-        self.line6.setObjectName("line6")       
-
         # WP dimension
         self.but6 = QtGui.QPushButton(self.vLW)
         self.but6.setText("X +")
@@ -356,9 +354,10 @@ class Ui_ModelWindow(object):
             obj.setStyleSheet("color: blue")            
             obj.setFont(font)
             
-        self.vL.addWidget(self.line4, 0 , 0 , 1, 16)
-        self.vL.addWidget(self.line5, 0 , 13 , 5, 1)
-        self.vL.addWidget(self.line6, 0 , 15 , 5, 1)
+        self.vL.addWidget(self.line4, 0 , 0 , 1, 17)
+        self.vL.addWidget(self.line5, 0 , 6 , 5, 1)
+        self.vL.addWidget(self.line6, 0 , 13 , 5, 1)
+        self.vL.addWidget(self.line7, 0 , 15 , 5, 1)
 
         # add the labels and the offset value
 

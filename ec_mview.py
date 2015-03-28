@@ -57,7 +57,10 @@ class ModelWindow(QtGui.QMainWindow, Ui_ModelWindow):
         self.msg03 = '<span style="color:blue">{0:6.3f}</span>'
 
         self.dspunit = ""        
-
+        
+        # FIXME in the definitive version this button will be not visible
+        #self.but5.setVisible(False)        
+        
         self.iscale = []
         self.incr = 0.5
         self.inc = 0

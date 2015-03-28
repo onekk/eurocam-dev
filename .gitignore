@@ -4,6 +4,7 @@ images/
 ngc/
 testing/
 i18n.txt
+test*.py
 pathgen.ini
 *.ngc
 .spyderproject

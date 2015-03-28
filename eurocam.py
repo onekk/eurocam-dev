@@ -16,7 +16,7 @@ import random
 from PySide import __version__ as PS_Ver
 from PySide import QtCore
 from PySide.QtGui import *
-from subprocess import call
+from subprocess import Popen
 
 #----- Eurocam modules
 import ec_glb as glb 
@@ -187,13 +187,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.msg_06t = self.tr("Insert {0} Name")
         self.msg_06m = self.tr("Spaces will be substitude with underscore (_)")        
         self.msg_07m = self.tr("The name <b>'{0}'</b>  is present.<br> <br> \
-                       Please choose another name.")
+            Please choose another name.")
         self.msg_08m = self.tr("At least one path direction has to be checked")                
         self.msg_09m = self.tr("At least one path has to be checked")  
         self.msg_10m = self.tr("You have to load a model to generate a path")
         self.msg_11m = self.tr("Cutter length cannot be great than overall length")
         self.msg_12m = self.tr("You have to select a <b> Path Strategy </b> to \
-                        generate a toolpath") 
+            generate a toolpath") 
         self.msg_13m = self.tr("{0} Exist. It will be overwritten.")                        
 
         self.msg_14m = self.tr("The ini file will be created in {0}")
@@ -201,7 +201,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.msg_16m = self.tr("The machines table will be created in {0}")
         self.msg_17m = self.tr("The workpieces table will be created in {0}")
         self.msg_18m = self.tr("You have to load a model to show a display window")
-
+        self.msg_19m = self.tr("EuroCAm has lanched the toolpath generator \
+            program with PID number {0} ")
+        
         # About EuroCAM message
         self.msg_a01t = self.tr("About EuroCAM")
         self.msg_a01m = self.tr("<p align = left><b>EuroCAM</b> version \
@@ -379,8 +381,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         dialog = QFileDialog()
         dialog.setNameFilters(filters)
-        # TODO implementig the reising of the dialog        
-        #dialog.resize(100,100,600,600)
 
 
         if dialog.exec_():
@@ -1002,7 +1002,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # TODO insert the correction for feed and step based on material
         # properties?
         #self.pc_feed_data() 
-        #self.pc_step_data()                        
+        #self.pc_step_data()
+                        
         # Deactivate the buttons because some parameters are changed
         self.pc_buttons(False)
 
@@ -1010,6 +1011,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def pc_createTask(self):
         # TODO the action for create Task
         self.MainTab.setCurrentIndex(6)
+
 
     def pc_genG(self):
         self.MainTab.setCurrentIndex(5)
@@ -1068,10 +1070,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # the filename has to be "pathgen.ini" because it is hardcoded
         # in ec_tpath.py as the input file
         p_fname = "./pathgen.ini"
-        EC_L.writePathfile(self,p_fname,"ngc")
-        return # FIXME eliminare dopo i test
-        # call the external program to generate Gcode    
-        call(["python","ec_tpath.py"]) #if in same directory, else get abs path 
+        ans = EC_L.writePathfile(self,p_fname,"ngc")
+        if ans == "OK":
+            # call the external program to generate Gcode
+            # in non blocking mode it create anew process and comunicate the 
+            # PID number
+            pid = Popen(["python", "ec_tpath.py"]).pid
+            msgtxt = self.msg_19m.format(pid)
+            self.myYesDiag("",msgtxt,QMessageBox.Warning) 
+        else:
+            return
 
     def readGCChB(self):
         # TODO read the checkboxes and set the variables to generate the G-Code
