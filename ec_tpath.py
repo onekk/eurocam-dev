@@ -11,7 +11,7 @@ import ConfigParser
 
 import ec_visu as ECV
 
-version = "0.3.5 Alpha"
+version = "0.3.6 Alpha"
 
 def trace():
     global c_cut, debug, diameter, dims, dircut, ec_version, feedrate,\
@@ -72,14 +72,14 @@ def trace():
             xmin = wpxmin
             xmax = wpxmax
             ymin = wpymin
-            ymax = wpxmax
+            ymax = wpymax
         else: # we have to enter the piece from a side and not plunge in it.
             e_f = diameter + (diameter * 0.10) # add a factor to stay safe
             if dircut in ('X', 'Xb'):
                 xmin = wpxmin 
                 xmax = wpxmax
                 ymin = wpymin - e_f
-                ymax = wpxmax + e_f                
+                ymax = wpymax + e_f                
             elif dircut in ('Y', 'Yb'):    
                 xmin = wpxmin - e_f
                 xmax = wpxmax + e_f
@@ -91,8 +91,10 @@ def trace():
 
         dims = [xmin, xmax, ymin, ymax, zmin, zmax]
 
-        print dims
-        print wpdims
+        if debug > 0:
+            print "dircut = ",dircut
+            print "dims = ",dims
+            print "WPdims = ",wpdims
 
         zslices = []
         for s_index in xrange(1,slices+1):
@@ -152,8 +154,10 @@ def trace():
     else:
         Np = int(math.ceil(n_pass)) #number of lines in the y-direction        
 
-    print "number of passes ", Np
-
+    if debug > 0:
+        print "n_pass {0} , Np {1}, ydim {2} , xyovl {3}".format(n_pass, Np, ydim,overlap)
+        #return
+  
     if dircut == "Y":
         paths = YdirectionZigPath(dims,Np)
     elif dircut == "X":

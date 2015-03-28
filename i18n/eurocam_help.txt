@@ -70,28 +70,25 @@ postamble so you can set different init operation per different machines.
 
 You can also edit the ngc files generated and modify according your needs.
 
-For now only the <b>Slice Removal</b> strategy works, it assume that the overlap of the passes
-in X or Y direction are the diameter of the tool minus the overlap percentage
-calculate with this formula diameter-(diameter*overlap/100), if you set 25%
-it will be diameter -(diameter*0,25)  
+<p>For now only the <b>Slice Removal</b> strategy works, it assume that the
+overlap of the passes is the diameter of the tool divided by 2 this value is 
+put in the  <b>X Y Increment</b> SpinBox so you can modify according your needs</p>  
+
+
 
 For the feedarate when the program is complete it will have a table containting
  the maximal suggested feedrate for each material (it is your choice what values
- are used ) but i will speed up the tuning operations of the gcode. 
+ are used ) but it will speed up the tuning operations of the gcode. 
 
 FOR NOW the feedrate is set using the maximun feedrate of the machine obtained
 
-- For the X and Y axis using the formula min(x-feedrate,y-feederate) and 
-  corrected by the factor in the spinbox for XY feed.
+- For the X and Y axis you can modify it through the <b>X Y feedrate</b> Spinbox.
 
-- For the Z feedrate it is assumed the Z plungerate in the 
- machine settings corrected by the factor in the plungerate spinbox.
+- For the Z axis you can modify it through the <b>Z plungerate</b> Spinbox.
  
-Both values are percentage so if you put in the box 90 you will obtain the 
-max feedrate multiplied per 1.90 if you input -10 you will obtain the max feedrate
- multiplied by 0.90.  
 
-For now only the zig passess work either in X or in Y direction.   
+<p>For now the path are calculated in the X or in the Y direction as monodirectional 
+path and as bidirectional if bidicrectional checkbox is checked in the Processes Tab.</p>
 
 <h4>Tools</h4>
 
@@ -141,11 +138,11 @@ I thinks it is enough for the actual hobby machines, feel free to ask for a diff
 
 <h4>Processes (Path Calculation)</h4>
 
-During the calculations come sata are used to avoid some mistakes:
+During the calculations come control are done to avoid some common mistakes:
 
 - The feedrate can't be greater than the machine feedrate
 - the step down can't be greater than the cutting length of the tool
-- The stepover is calculated starting to the tool diameter and applying the desidered overlap
+- The stepover can't be greater than the tool diameter
 
 
 Good work and beware of flying chips.

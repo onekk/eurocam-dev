@@ -201,7 +201,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.msg_16m = self.tr("The machines table will be created in {0}")
         self.msg_17m = self.tr("The workpieces table will be created in {0}")
         self.msg_18m = self.tr("You have to load a model to show a display window")
-        self.msg_19m = self.tr("EuroCAm has lanched the toolpath generator \
+        self.msg_19m = self.tr("<b>EuroCAm</b> has launched the toolpath generator \
             program with PID number {0} ")
         
         # About EuroCAM message
@@ -571,7 +571,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             msgtit = "Warning"
             msgtxt = "Unable to create file {0} in {1}".format(inifile,path)
             icon = QMessageBox.Information                
-            self.myYesDiag(msgtit,msgtxt,icon)
+            self.myYesDiag(msgtit,msgtxt,"",icon)
 
 
     ###################################
@@ -588,32 +588,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         tln2 = "<tr><td> {0} </td><td>{1}</td><td>{2}</td></tr>"
         if ctst == 0: # Tool Data
             for i,v in enumerate(glb.datahead):
-                if i in (0,4,5):
+                print i,v 
+                if i in (1,3,4,5): # float
+                    mtxt = mtxt + tln0.format(v,glb.oldata[i],glb.newdata[i]) 
+                elif i in (0,2,6,7): # integer
                     mtxt = mtxt + tln1.format(v,glb.oldata[i],glb.newdata[i]) 
-                elif i == 6:
-                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i]) 
-                else:
-                    mtxt = mtxt + tln0.format(v,glb.oldata[i],glb.newdata[i])                     
+                else: # text no special formatting
+                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i])                     
         elif ctst == 1: # Machine data
             for i,v in enumerate(glb.datahead):
                 #if glb.debug:
                 #    print "I V old New =>>",i,v,glb.oldata[i],glb.newdata[i]
-                if i in (0,1,2,3,4,5):
+                if i in (0,1,2,3,4,5): # float
                     mtxt = mtxt + tln0.format(v,glb.oldata[i],glb.newdata[i]) 
-                elif i in (7,8,9):
-                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i]) 
-                else:
+                elif i == 6 : # integer
                     mtxt = mtxt + tln1.format(v,glb.oldata[i],glb.newdata[i]) 
+                else: # text no special formatting
+                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i]) 
         elif ctst == 2: # WP data
             for i,v in enumerate(glb.datahead):
                 if glb.debug > 3:
                     print "I V old New =>>",i,v,glb.oldata[i],glb.newdata[i]
-                if i in (0,1,2,3,4,5):
+                if i in (0,1,2,3,4,5):  # float
                     mtxt = mtxt + tln0.format(v,glb.oldata[i],glb.newdata[i]) 
-                elif i == 7:
-                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i]) 
-                else:
+                elif i == 6: # integer 
                     mtxt = mtxt + tln1.format(v,glb.oldata[i],glb.newdata[i]) 
+                else: # text no special formatting
+                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i]) 
      
         mtxt = mtxt + "</table>"       
 
@@ -648,7 +649,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
         if O_name in O_data:
             msgtxt = self.msg_07m.format(O_name)
-            self.myYesDiag("",msgtxt,QMessageBox.Warning)
+            self.myYesDiag("",msgtxt,"",QMessageBox.Warning)
             return "KO"
         else:
             return O_name
@@ -697,7 +698,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def toolDel(self):
         if self.ToolCB.count() < 2: #2
             msgtxt = self.msg_05m.format(glb.tool_sin,glb.tool_plu)
-            self.myYesDiag("",msgtxt,QMessageBox.Warning) 
+            self.myYesDiag("",msgtxt,"",QMessageBox.Warning) 
             return
         else:    
             glb.mod_mot_name = self.ToolCB.currentText()
@@ -721,7 +722,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         glb.newdata = EC_UA.readTool(self)
         if glb.newdata[3] > glb.newdata[4]:
             msgtxt = self.msg_11m
-            self.myYesDiag("",msgtxt,QMessageBox.Warning)                             
+            self.myYesDiag("",msgtxt,"",QMessageBox.Warning)                             
             return        
         EC_UA.toolMask(self,True)
         glb.EditTool = False
@@ -819,7 +820,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def machDel(self):
         if self.MachCB.count() < 2:
             msgtxt = self.msg_05m.format(glb.mach_sin,glb.mach_plu)
-            self.myYesDiag("",msgtxt,QMessageBox.Warning) 
+            self.myYesDiag("",msgtxt,"",QMessageBox.Warning) 
             return
         else:    
             glb.mod_mot_name = self.MachCB.currentText()
@@ -907,7 +908,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # TODO Check the working
         if self.WPCB.count() < 2:
             msgtxt = self.msg_05m.format(glb.wp_sin,glb.wp_plu)
-            self.myYesDiag("",msgtxt,QMessageBox.Warning) 
+            self.myYesDiag("",msgtxt,"",QMessageBox.Warning) 
             return
         else:    
             glb.mod_mot_name = self.WPCB.currentText()
@@ -993,7 +994,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         glb.t_data = glb.Tools[value]              
         self.pc_step_data()          
         # Deactivate the buttons because some parameters are changed
-        self.pc_buttons(False)    
+        self.pc_buttons(False)
+        # TODO set the tool also in the tooltab and the same for the machine
+        # and wp
 
 
     def pc_wp_chosen(self,value):
@@ -1036,7 +1039,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # or do something
         
     def pc_step_data(self):
-        diameter = float(glb.t_data[1]) 
+        diameter = float(glb.t_data[1])
+        c_length = float(glb.t_data[3])
         self.PCTTd.setText("{0:.4} {1}".format(diameter,glb.tunit))
         # Step down increment is obtained from the rules of thumb:
         # diameter/2 
@@ -1044,8 +1048,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # and then tuned by the spinbox controls
         preset = float(diameter/2)
         self.PCSBXYovl.setValue(preset)
+        self.PCSBXYovl.setRange(0.000, diameter)
         self.PCSBZsd.setValue(preset)    
-
+        self.PCSBZsd.setRange(0.000, c_length)
+        
     def pc_feed_data(self):
         # XY feed is the minimun between X and Y feedrate
         # TODO consider the material data    
@@ -1077,7 +1083,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # PID number
             pid = Popen(["python", "ec_tpath.py"]).pid
             msgtxt = self.msg_19m.format(pid)
-            self.myYesDiag("",msgtxt,QMessageBox.Warning) 
+            self.myYesDiag("",msgtxt,"",QMessageBox.Information) 
         else:
             return
 

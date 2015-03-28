@@ -458,14 +458,14 @@ def initPCUI(self):
     self.PCSTRB2.setEnabled(False)
     self.PCSTRB3.setEnabled(False)
     self.PCSTRB4.setEnabled(False)
-    self.PCL01.setVisible(False)    
+    self.PCL01.setVisible(False)
     self.PCSB01.setVisible(False)    
     self.PCPBGenG.setVisible(False)
     self.PCPBCt.setVisible(False)     
     self.PCPBCal.setVisible(False)
-    # FIXME eliminate after the necessary corrections
-    self.PCSTRB1.setChecked(True)
-    self.PCCbidir.setVisible(False)
+    self.PCSTRB1.setChecked(True) # Check the SR Strategy 
+    self.PCPDRB1.setChecked(True) # Check the X direction  
+    self.PCTTd.setReadOnly(True)  # it has no meaning to modify it in thr PC UI
     pcConstraint(self)
 
 def pcConstraint(self):

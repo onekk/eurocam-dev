@@ -268,8 +268,9 @@ def calc_process(self):
         t_name = self.PCToolCB.currentText()
         #retrieve the wp coordinates from the display window
         glb.wpdim = self.md.get_wp_dim()
-        print glb.wpdim
-        #return # FIXME provvisorio        
+        if glb.debug > 0:        
+            print glb.wpdim
+            #return # FIXME provvisorio        
 
         zmin = float(glb.wpdim[4])               
         zmax = float(glb.wpdim[5])
@@ -278,14 +279,14 @@ def calc_process(self):
 
         # TODO if wp_h > max H_working emit a warning
     
-        # TODO if the tool is not capable of centercut and the workpiece,
-        # is small than the model emit a warning
-
         feedrate = self.PCSBXYfc.value()
+        print "feedrate {0}".format(feedrate)
+        
         plungerate = self.PCSBZfc.value()
         zpc = self.PCSBZsd.value()
+
         xyovl = self.PCSBXYovl.value()
-        
+       
         # Select strategy for now it only cosmetic as only one strategy is
         # implemented  
         for i,obj in enumerate((self.PCSTRB1, self.PCSTRB2, self.PCSTRB3, self.PCSTRB4)):
@@ -300,7 +301,9 @@ def calc_process(self):
              msgtxt = self.msg_12m
              self.myYesDiag("",msgtxt,"",QMessageBox.Warning)
              return "KO"                    
-        # dircut is obtained from the Process Tab (for now only X and Y work)
+
+        # dircut is obtained from the Process Tab
+        # (for now only X and Y work in one pass and bidirectional mode)
 
         for i,obj in enumerate((self.PCPDRB1, self.PCPDRB2, self.PCPDRB3, self.PCPDRB4)):
             if obj.isChecked():
@@ -315,6 +318,15 @@ def calc_process(self):
             self.myYesDiag("",msgtxt,"",QMessageBox.Warning)
             return "KO"                    
 
+        if self.PCCbidir.isChecked(): # bidirectional mode
+            if dircut == 'X':
+                dircut = 'Xb'
+            elif dircut == 'Y':
+                dircut = 'Yb'
+            else:
+                # nothing to be done
+                pass                
+            
         # maybe shape has to be considered in step down calculations ? 
         # shape = int(glb.t_data[0])
         # TODO check the alghoritmn to obtain the slices
