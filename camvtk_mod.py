@@ -354,8 +354,11 @@ class Cone(CamvtkActor):
         transformFilter.Update()
         
         self.mapper = vtk.vtkPolyDataMapper()
-        self.mapper.SetInput(transformFilter.GetOutput())
         
+        if vtk.VTK_MAJOR_VERSION <= 5:        
+            self.mapper.SetInput(transformFilter.GetOutput())
+        else:
+            self.mapper.SetInputConnection(self.src.GetOutputPort())        
         
         #self.mapper = vtk.vtkPolyDataMapper()
         #self.mapper.SetInput(self.src.GetOutput())
@@ -522,6 +525,12 @@ class Tube(CamvtkActor):
         tubefilter.Update()
         
         self.mapper = vtk.vtkPolyDataMapper()
+
+        #if vtk.VTK_MAJOR_VERSION <= 5:
+        #    self.mapper.SetInput(tubefilter.GetOutput())
+        #else:
+        #    self.mapper.SetInputConnection(tubefilter.GetOutputPort())                  
+        
         self.mapper.SetInput(tubefilter.GetOutput())
         self.SetMapper(self.mapper)
         self.SetColor(color)

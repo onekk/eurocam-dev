@@ -9,15 +9,15 @@ import PySide.QtGui as QtGui
 import PySide.QtCore as QtCore
 
 
-def initUI(self):
+def init_ui(self):
      # Clear the upper labels
     for obj in (self.IL_1 , self.IL_2 , self.IL_3 , self.IL_4 , self.IL_5):
         obj.setText("")    
 
     # Set the units in the QEditText Boxes 
-    setUnit(self)
+    set_ui_unit(self)
     
-    clearMdUI(self)
+    clear_model_tab(self)
     popToolUI(self)
     popMachUI(self)
     popWPUI(self)
@@ -25,7 +25,7 @@ def initUI(self):
     initGCUI(self)
     
         
-def setUnit(self):
+def set_ui_unit(self):
     # set the Unit in the Tool Tab
     for obj in (self.TGSPRad , self.TGSPDia, self.TGSPOvl, self.TGSPShd, 
                      self.TGSPLen):
@@ -44,11 +44,11 @@ def setUnit(self):
 
 ################### GV actions
 
-def clearGV(self):
+def clear_graphics_win(self):
         self.scene.clear()
         pass
 
-def initGV(self):
+def init_graphics_win(self):
     self.scene = QtGui.QGraphicsScene()
     self.scene.setSceneRect(0, 0, 378, 398)
     self.brush1 = QtGui.QBrush(QtGui.QColor(255, 255, 255))
@@ -59,7 +59,7 @@ def initGV(self):
     self.GV.setBackgroundBrush(self.brush1)
     self.GV.setScene(self.scene)        
 
-def toolPaint(self):
+def tool_paint(self):
     self.RightTB.setCurrentIndex(0) # Image Tab
     rect1 = self.scene.addRect(150,100,40,80)
     #rect1.fill()    
@@ -69,7 +69,7 @@ def toolPaint(self):
 ################### Model UI
 
 
-def clearMdUI(self):
+def clear_model_tab(self):
     for obj in (self.MdTmX, self.MdTmY, self.MdTmZ,
                     self.MdTMX, self.MdTMY, self.MdTMZ,
                     self.MdTdimx, self.MdTdimy, self.MdTdimz):
@@ -77,7 +77,7 @@ def clearMdUI(self):
         obj.setReadOnly(True)
         obj.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
 
-def writeMddata(self,dims):
+def write_model_data(self,dims):
         dimx,dimy,dimz = dims    
         if glb.unit == 0 :
             dimformat="{0:10.3f}"
@@ -98,28 +98,28 @@ def writeMddata(self,dims):
 
 ################## Tool UI 
 
-def initToolCB(self):
+def init_tool_comboboxes(self):
     self.ToolCB.clear()
     self.ToolCB.addItems(sorted(glb.Tools.keys()))  
     self.PCToolCB.clear()
     self.PCToolCB.addItems(sorted(glb.Tools.keys()))  
     
 
-def initShapeCB(self):
+def init_tool_shape_comboboxes(self):
     # populate the Tool Shape ComboBox
     self.TGCBTyp.clear()    
     self.TGCBTyp.addItems(glb.shape)
     self.TGCBTyp.setInsertPolicy(QtGui.QComboBox.InsertPolicy.NoInsert)
 
 
-def initCcCB(self):
+def init_centercut_combobox(self):
     # populate the Center Cut ComboBox    
     self.TGCBCc.clear()
     self.TGCBCc.addItems([glb.no,glb.yes])
     self.TGCBCc.setInsertPolicy(QtGui.QComboBox.InsertPolicy.NoInsert)
     
 
-def writeTooldata(self,key):
+def write_tool_data(self,key):
     # http://www.anderswallin.net/2011/08/opencamlib-cutter-shapes/
     #0 = CylCutter(diameter, length)
     #1 = BallCutter(diameter, length)
@@ -129,7 +129,7 @@ def writeTooldata(self,key):
     data = glb.Tools[key]    
     ttype = int(data[0])
     
-    toolConstraint(self,ttype)            
+    set_tool_limits(self,ttype)            
     
     self.TGCBTyp.setCurrentIndex(ttype)
     self.TGSPDia.setValue(float(data[1]))
@@ -142,7 +142,7 @@ def writeTooldata(self,key):
     self.TGTnote.setText(str(data[8]))
 
     
-def clearToolUI(self):
+def clear_tool_ui(self):
     for obj in (self.TGSPDia, self.TGSPRad, self.TGSPLen, self.TGSPOvl,
                 self.TGSPShd ):
         obj.setValue(0.0)
@@ -151,7 +151,7 @@ def clearToolUI(self):
     self.TGTnote.setText("")    
     
 
-def toolConstraint(self,ttype):
+def set_tool_limits(self,ttype):
     if ttype in (0,1):
         self.TGLRad.setVisible(False)
         self.TGSPRad.setVisible(False)
@@ -247,9 +247,9 @@ def toolMask(self,mskst):
 
        
 def popToolUI(self):
-    initShapeCB(self)
-    initCcCB(self)
-    initToolCB(self)
+    init_tool_shape_comboboxes(self)
+    init_centercut_combobox(self)
+    init_tool_comboboxes(self)
     greyToolB(self,True)
 
 

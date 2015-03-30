@@ -12,7 +12,20 @@ import sys
 sversion = "0.5"
 version = sversion + ".0 Alpha"
 
-debug = 3 # comment out to deactivate debug output
+
+
+
+debug = [1,1,1,1,1]
+#        0 1 2 3 4
+'''
+ set the corresponding value to 1 to activate the debug output
+ 
+ 0 = debug of the program paths
+ 1 = NC
+ 2 = Gcode     
+ 3 = debug the calculation of the toolpath 
+ 4 = debug the writing on the various tables and the modify dialogs
+'''
 
 localini = 1
 # 0 create the ini file in ./EuroCAM

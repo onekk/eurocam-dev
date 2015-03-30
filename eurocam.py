@@ -3,8 +3,10 @@
 
 """
 author: Carlo Dormeletti
-website: http://github.com/...
+website: http://github.com//onekk
 last edited: February 2015
+
+
 """
 
 import sys
@@ -13,121 +15,105 @@ import errno
 import time
 import math
 import random
+from subprocess import Popen
+
+# Pyside import
 from PySide import __version__ as PS_Ver
 from PySide import QtCore
 from PySide.QtGui import *
-from subprocess import Popen
 
-#----- Eurocam modules
-import ec_glb as glb 
+# Eurocam modules
+
+import ec_glb as glb
 from eurocam_ui import Ui_MainWindow
 import ec_logic as EC_L
 import ec_ui_act as EC_UA
 import visvis as vv
 plot = vv.use('pyside')
+
 import ec_mview as ECM
+
 stime = time.time()
 
-#Inherit from QThread
-class Worker(QtCore.QThread):
-
-    #This is the signal that will be emitted during the processing.
-    #By including int as an argument, it lets the signal know to expect
-    #an integer argument when emitting.
-    updateProgress = QtCore.Signal(int)
-
-    #You can do any extra things in this init you need, but for this example
-    #nothing else needs to be done expect call the super's init
-    def __init__(self):
-        QtCore.QThread.__init__(self)
-        print "worker init"    
-    #A QThread is run by calling it's start() function, which calls this run()
-    #function in it's own "thread". 
-    def run(self):
-        #Notice this is the same thing you were doing in your progress() function
-        for i in range(1, 101):
-            #Emit the signal so it can be received on the UI side.
-            self.updateProgress.emit(i)
-            time.sleep(0.1)
+app = None
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-   
+    global app
     def __init__(self, parent=None):
         # maybe a spash screen goes here?
         super(MainWindow, self).__init__(parent)
-        self.setupUi(self)    
+        self.setupUi(self)
 
         self.setWindowTitle("EuroCAM - {0}".format(glb.sversion))
 
         # Binding for menu and close action
 
-        self.actionOpen_Drawing.triggered.connect(self.Open_Drawing)
-        self.actionAbout_EuroCAM.triggered.connect(self.About_EuroCAM)
-        self.actionExit.triggered.connect(self.close) 
-        self.actionShow_display_window.triggered.connect(self.Model_Load)
-        self.actionHelp.triggered.connect(self.HelpText)
-        self.menuInch.triggered.connect(self.UnitChange)
-        self.actionGCF.triggered.connect(self.SetGbaseName)
-        self.actionAbout_Qt.triggered.connect(self.About_Qt)
+        self.actionOpen_Drawing.triggered.connect(self.open_drawing)
+        self.actionAbout_EuroCAM.triggered.connect(self.about_eurocam)
+        self.actionExit.triggered.connect(self.close)
+        self.actionShow_display_window.triggered.connect(self.model_load)
+        self.actionHelp.triggered.connect(self.help_text)
+        self.menuInch.triggered.connect(self.unit_change)
+        self.actionGCF.triggered.connect(self.set_gbasename)
+        self.actionAbout_Qt.triggered.connect(self.about_Qt)
 
+        # Binding for Tool Tab
 
-        # Binding for Tool Tab 
-
-        self.ToolNewPB.clicked.connect(self.toolNew)
-        self.ToolModPB.clicked.connect(self.toolMod)
-        self.ToolDelPB.clicked.connect(self.toolDel)
-        self.TTConf.clicked.connect(self.toolConf)
-        self.TGCBCc.activated.connect(self.TGCBCc_State)
-        self.TGCBTyp.activated.connect(self.TGCBTyp_State)
+        self.ToolNewPB.clicked.connect(self.tool_new)
+        self.ToolModPB.clicked.connect(self.tool_mod)
+        self.ToolDelPB.clicked.connect(self.tool_del)
+        self.TTConf.clicked.connect(self.tool_conf)
+        self.TGCBCc.activated.connect(self.tool_cb_state)
+        self.TGCBTyp.activated.connect(self.tool_type_state)
         self.connect(self.ToolCB, QtCore.SIGNAL('activated(QString)'), self.tool_chosen)
 
         # Binfindg for Machine Tab
 
-        self.MachNewPB.clicked.connect(self.machNew)
-        self.MachModPB.clicked.connect(self.machMod)        
-        self.MachDelPB.clicked.connect(self.machDel)
-        self.MachConfPB.clicked.connect(self.machConf)        
+        self.MachNewPB.clicked.connect(self.mach_new)
+        self.MachModPB.clicked.connect(self.mach_mod)
+        self.MachDelPB.clicked.connect(self.mach_del)
+        self.MachConfPB.clicked.connect(self.mach_conf)
         self.connect(self.MachCB, QtCore.SIGNAL('activated(QString)'), self.mach_chosen)
-        self.MGCoCB.activated.connect(self.mcoord_State)
+        self.MGCoCB.activated.connect(self.mach_coord_state)
 
         # Binding for Workpiece Tab
 
         self.connect(self.WPCB, QtCore.SIGNAL('activated(QString)'), self.wp_chosen)
-        self.WPNewPB.clicked.connect(self.wpNew)
-        self.WPModPB.clicked.connect(self.wpMod)        
-        self.WPDelPB.clicked.connect(self.wpDel)
-        self.WPConfPB.clicked.connect(self.wpConf)     
+        self.WPNewPB.clicked.connect(self.wp_new)
+        self.WPModPB.clicked.connect(self.wp_mod)
+        self.WPDelPB.clicked.connect(self.wp_del)
+        self.WPConfPB.clicked.connect(self.wp_conf)
 
         # Binding for Process Tab
 
         self.connect(self.PCMachCB, QtCore.SIGNAL('activated(QString)'), self.pc_mach_chosen)
         self.connect(self.PCToolCB, QtCore.SIGNAL('activated(QString)'), self.pc_tool_chosen)
-        self.connect(self.PCWPCB, QtCore.SIGNAL('activated(QString)'), self.pc_wp_chosen)        
+        self.connect(self.PCWPCB, QtCore.SIGNAL('activated(QString)'), self.pc_wp_chosen)
         self.PCPBCal.clicked.connect(self.pc_calc_task)
-        self.PCPBGenG.clicked.connect(self.pc_genG) 
-        self.PCPBCt.clicked.connect(self.pc_createTask)        
+        self.PCPBGenG.clicked.connect(self.pc_gen_g)
+        #self.PCPBCt.clicked.connect(self.pc_create_task)
 
         # don't needed for now here for reference
-        #self.PCSBXYovl.valueChanged.connect(self.pc_SBXYovl_uV)    
-        #self.PCSBSdc.valueChanged.connect(self.pc_SB_uV)    
-        #self.PCSBOvl.valueChanged.connect(self.pc_Ovl_uV)    
-        
+        #self.PCSBXYovl.valueChanged.connect(self.pc_SBXYovl_uV)
+        #self.PCSBSdc.valueChanged.connect(self.pc_SB_uV)
+        #self.PCSBOvl.valueChanged.connect(self.pc_Ovl_uV)
+
         # Binding for the G-Code Tab
-        self.GCPB1.clicked.connect(self.genNGC)
-        self.GCPB2.clicked.connect(self.saveNGCP)            
+        self.GCPB1.clicked.connect(self.gen_ngc)
+        self.GCPB2.clicked.connect(self.save_ngc_pref)
+
+        self.md = None # create a void reference for the model display
+                       #  window otherwise the new window is destroyed
+
+        self.connect(self.MainTab,QtCore.SIGNAL('currentChanged(int)'),self.main_tab_chosen)
         
-        self.md = None # create a void reference for the model
-                       # display window otherwise it will be destroyed
-    
-        self.connect(self.MainTab,QtCore.SIGNAL('currentChanged(int)'),self.MainTabchosen)        
+        self.start_action()
 
-        self.StartAction()
-
-    def StartAction(self):
+    def start_action(self):
         # startaction()
 
         self.Log.append(" EuroCAM")
-        
+
         self.Log.append(" Inifile = {0}".format(glb.inifile))
 
 
@@ -136,65 +122,65 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # To make the translation work the content have to be put here     #
         #                                                                  #
         ####################################################################
-       
+
         self.toolcyl = self.tr("Cylindrical")
-        self.toolsph = self.tr("Spherical (Ball)")        
-        self.tooltor = self.tr("Toroidal (Bull)") 
-        self.toolcon = self.tr("Conical (V shape)") 
+        self.toolsph = self.tr("Spherical (Ball)")
+        self.tooltor = self.tr("Toroidal (Bull)")
+        self.toolcon = self.tr("Conical (V shape)")
 
         glb.shape = (self.toolcyl, self.toolsph, self.tooltor, self.toolcon)
-         
-        glb.yes = self.tr("Yes")            
-        glb.no = self.tr("No") 
-       
+
+        glb.yes = self.tr("Yes")
+        glb.no = self.tr("No")
+
         glb.radius = self.tr("Radius")
-        glb.CorRad = self.tr("Corner Radius")   
-        glb.Angle = self.tr("Angle")   
+        glb.CorRad = self.tr("Corner Radius")
+        glb.Angle = self.tr("Angle")
         glb.degree = self.tr(" deg")
-        
+
         self.mm = " mm"
         self.inch = self.tr(" inch")
 
         glb.tool_plu = self.tr("Tools")
         glb.mach_plu = self.tr("Machines")
         glb.wp_plu = self.tr("Work Pieces")
-        
+
         glb.tool_sin = self.tr("Tool")
         glb.mach_sin = self.tr("Machine")
         glb.wp_sin = self.tr("Work Piece")
-         
+
         self.posco = self.tr("Positive Coordinates")
         self.negco = self.tr("Negative Coordinates")
 
         glb.coord = (self.posco,self.negco)
-        
 
-        ####################################################################        
-        #                                                                  # 
-        # QMessageBox string are put here to make them correctly translate # 
+
+        ####################################################################
+        #                                                                  #
+        # QMessageBox string are put here to make them correctly translate #
         #                                                                  #
         ####################################################################
 
-        # Exit Dialog        
+        # Exit Dialog
         self.msg_01t = self.tr("<b>Exit Dialog</b>")
         self.msg_01m = self.tr("Are you sure you want to exit?")
-        
+
         self.msg_02m = self.tr("<p> There is no help file yet, please report\
             this error at <br> <b> https://github.com/onekk/eurocam </b></p>")
         self.msg_03t = self.tr("This data are correct, do you want to write them? ")
         self.msg_04m = self.tr("Are you sure you wan to delete this {0}? ")
         self.msg_05m = self.tr("Only one {0} left, you can't cancel all {1}.")
         self.msg_06t = self.tr("Insert {0} Name")
-        self.msg_06m = self.tr("Spaces will be substitude with underscore (_)")        
+        self.msg_06m = self.tr("Spaces will be substitude with underscore (_)")
         self.msg_07m = self.tr("The name <b>'{0}'</b>  is present.<br> <br> \
             Please choose another name.")
-        self.msg_08m = self.tr("At least one path direction has to be checked")                
-        self.msg_09m = self.tr("At least one path has to be checked")  
+        self.msg_08m = self.tr("At least one path direction has to be checked")
+        self.msg_09m = self.tr("At least one path has to be checked")
         self.msg_10m = self.tr("You have to load a model to generate a path")
         self.msg_11m = self.tr("Cutter length cannot be great than overall length")
         self.msg_12m = self.tr("You have to select a <b> Path Strategy </b> to \
-            generate a toolpath") 
-        self.msg_13m = self.tr("{0} Exist. It will be overwritten.")                        
+            generate a toolpath")
+        self.msg_13m = self.tr("{0} Exist. It will be overwritten.")
 
         self.msg_14m = self.tr("The ini file will be created in {0}")
         self.msg_15m = self.tr("The tools table will be created in {0}")
@@ -203,7 +189,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.msg_18m = self.tr("You have to load a model to show a display window")
         self.msg_19m = self.tr("<b>EuroCAm</b> has launched the toolpath generator \
             program with PID number {0} ")
-        
+
         # About EuroCAM message
         self.msg_a01t = self.tr("About EuroCAM")
         self.msg_a01m = self.tr("<p align = left><b>EuroCAM</b> version \
@@ -211,7 +197,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             <p> It generates G-Code ready to be sent to a CNC machine.<br></p>\
             <p align = left>For Issues and request about this program use the\
             Issues function at: <br> <br>\
-            <b> https://github.com/onekk/eurocam </b></p>").format(glb.version)        
+            <b> https://github.com/onekk/eurocam </b></p>").format(glb.version)
 
         # About Qt message
         self.msg_a02t = self.tr("About Qt")
@@ -226,47 +212,47 @@ class MainWindow(QMainWindow, Ui_MainWindow):
              see <b> https://github.com/aewallin/opencamlib</b><br><br> The \
              exact version of OpenCamlib could be seen in the top comment of \
              the generated G-Code files </p> \
-             ").format(glb.version, PS_Ver, QtCore.__version_info__, 
+             ").format(glb.version, PS_Ver, QtCore.__version_info__,
                        QtCore.qVersion())
-        
+
         self.msg_i01 = self.tr("Warning")
-                        
+
         ####################################################################
 
-        # check the esistence of the ini files and crete them if necessary 
+        # check the esistence of the ini files and crete them if necessary
         if glb.inifile is None:
             if glb.localini == 1:
                 self.create_inifile("./EuroCAM")
             else:
                 self.create_inifile("~/.config/EuroCAM")
- 
-        self.readSettings()                  
-        EC_L.setUnit(self)
+
+        self.read_ini_settings()
+        EC_L.set_unit(self)
 
         # set the unit label
         if int(glb.unit) == 0 :
             glb.dunit = self.tr("Unit = mm")
         else:
-            glb.dunit = self.tr("Unit = Inch")     
+            glb.dunit = self.tr("Unit = Inch")
 
         # check the presence of the tool table file and create it if necessary
 
         if glb.f_tooltable is None:
             if glb.localini == 1:
-                self.create_toolfile("./EuroCAM")
+                EC_L.create_toolfile(self,"./EuroCAM")
             else:
-                self.create_toolfile("~/.config/EuroCAM")
+                EC_L.create_toolfile(self,"~/.config/EuroCAM")
 
         EC_L.readTooltable(self)
         self.Log.append("ToolTable Initizialization")
 
         # check the presence of the machine file and create it if necessary
-            
-        if glb.f_machtable is None:            
+
+        if glb.f_machtable is None:
             if glb.localini == 1:
-                self.create_machfile("./EuroCAM")
+                EC_L.create_machfile(self,"./EuroCAM")
             else:
-                self.create_machfile("~/.config/EuroCAM")
+                EC_L.create_machfile(self,"~/.config/EuroCAM")
 
         EC_L.readMachtable(self)
         self.Log.append("MachTable Initizialization")
@@ -275,17 +261,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if glb.f_wptable is None:
             if glb.localini == 1:
-                self.create_wpfile("./EuroCAM")
+                EC_L.create_wpfile(self,"./EuroCAM")
             else:
-                self.create_wpfile("~/.config/EuroCAM")
+                EC_L.create_wpfile(self,"~/.config/EuroCAM")
 
         EC_L.readWPtable(self)
         self.Log.append("WPTable Initizialization")
-        
-        EC_UA.initUI(self)
+
+        EC_UA.init_ui(self)
         self.Log.append("UI initialisation")
 
-        EC_UA.writeTooldata(self,self.ToolCB.currentText())
+        EC_UA.write_tool_data(self,self.ToolCB.currentText())
         EC_UA.writeMachdata(self,self.MachCB.currentText())
         EC_UA.writeWPdata(self,self.WPCB.currentText())
 
@@ -299,67 +285,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         glb.basename = os.path.join(os.path.dirname(__file__), 'ngc',glb.basename)
 
         self.IL_2.setText("Basename Set")
-        self.IL_2.setToolTip("Basename = <b>{0}</b>".format(glb.basename))  
+        self.IL_2.setToolTip("Basename = <b>{0}</b>".format(glb.basename))
 
-        EC_UA.initGV(self)
+        EC_UA.init_graphics_win(self)
         if self.MainTab.currentIndex() == 2:
-            EC_UA.toolPaint(self)
-        
+            EC_UA.tool_paint(self)
+
         self.MainTab.removeTab(6) # self.TaskTab TODO delete when the task tab is finished
         self.MainTab.setCurrentIndex(0)
-        self.RightTB.setCurrentIndex(1) # Show the Text TAB           
+        self.RightTB.setCurrentIndex(1) # Show the Text TAB
 
-    ############################################
-    #                                          #
-    # Files creation usually at the first run  # 
-    #                                          #
-    ############################################
+        self.show()
+        
+    #####################
+    #                   #
+    #  inifile actions  #
+    #                   #
+    #####################
 
     def create_inifile(self,path):
         msgtxt = self.msg_14m.format(path)
-        self.myYesDiag(self.msg_i01,msgtxt,"",QMessageBox.Information)        
-        self.create_path_and_inifile(path,glb.inif_name)        
-        glb.inifile = glb.ini_search_paths(glb.inif_name)        
-        self.writeSettings()
+        self.my_diag(self.msg_i01,msgtxt,"",QMessageBox.Information)
+        self.create_path_and_inifile(path,glb.inif_name)
+        glb.inifile = glb.ini_search_paths(glb.inif_name)
+        self.write_ini_settings()
 
-
-    def create_toolfile(self,path):
-        msgtxt = self.msg_15m.format(path)
-        self.myYesDiag(self.msg_i01,msgtxt,"",QMessageBox.Information)   
-        self.create_path_and_inifile(path,glb.toolf_name)
-        glb.f_tooltable = glb.ini_search_paths(glb.toolf_name)
-        EC_L.writeTooltable(self) 
-        
-
-    def create_machfile(self,path):
-        msgtxt = self.msg_16m.format(path)
-        self.myYesDiag(self.msg_i01,msgtxt,"",QMessageBox.Information)
-        self.create_path_and_inifile(path,glb.machf_name) 
-        glb.f_machtable = glb.ini_search_paths(glb.machf_name)
-        EC_L.writeMachtable(self)
-
-
-    def create_wpfile(self,path):
-        msgtxt = self.msg_17m.format(path)
-        self.myYesDiag(self.msg_i01,msgtxt,"",QMessageBox.Information)
-        self.create_path_and_inifile(path,glb.wp_name)               
-        glb.f_wptable = glb.ini_search_paths(glb.wp_name)        
-        EC_L.writeWPtable(self) 
-
-    # inifile actions
-
-    def readSettings(self):
-        settings = QtCore.QSettings(glb.inifile, QtCore.QSettings.IniFormat)    
+    def read_ini_settings(self):
+        settings = QtCore.QSettings(glb.inifile, QtCore.QSettings.IniFormat)
         pos = settings.value("pos", QtCore.QPoint(200, 200))
         size = settings.value("size", QtCore.QSize(400, 400))
         self.resize(size)
         self.move(pos)
         settings.beginGroup("Preferences")
         glb.unit = settings.value("unit")
-        settings.endGroup()       
+        settings.endGroup()
 
-    def writeSettings(self):
-        settings = QtCore.QSettings(glb.inifile, QtCore.QSettings.IniFormat)    
+    def write_ini_settings(self):
+        settings = QtCore.QSettings(glb.inifile, QtCore.QSettings.IniFormat)
         settings.setValue("pos", self.pos())
         settings.setValue("size", self.size())
         settings.beginGroup("Preferences")
@@ -369,12 +331,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     ######################################
-    #                                    #     
+    #                                    #
     # Menu actions                       #
     #                                    #
     ######################################
-  
-    def Open_Drawing(self):
+
+    def open_drawing(self):
         filters = [] # QStringList()
         filters.append("*.stl")
         filters.append("*.*")
@@ -384,10 +346,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         if dialog.exec_():
-            fileNames = dialog.selectedFiles()       
+            fileNames = dialog.selectedFiles()
         else:
             return
-            
+
         if len(fileNames) > 0:
             fileName =  fileNames[0]
             glb.model[0] = fileName
@@ -396,28 +358,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ngcdir = os.path.join(os.path.dirname(__file__), 'ngc')
             basename = os.path.splitext(os.path.basename(fileName))[0]
             glb.basename =  os.path.join(ngcdir,basename)
-            self.model_info(fileName)           
+            self.model_info(fileName)
 
-            EC_UA.popPCdata(self)            
+            EC_UA.popPCdata(self)
             self.PCPBCal.setVisible(True)
         else:
             return
 
-            
-    def About_EuroCAM(self):
-        QMessageBox.about(self,self.msg_a01t,self.msg_a01m) 
-          
 
-    def Model_Load(self):
+    def about_eurocam(self):
+        QMessageBox.about(self,self.msg_a01t,self.msg_a01m)
+
+
+    def model_load(self):
         if glb.M_Load == True:
-            filename = glb.model[0]
+            # visualize a splash window during the model loading.
+            #pixmap = QPixmap("./splash.png")
+            #splash = QSplashScreen(pixmap)
+            #splash.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+            #splash.show()
+            # Loading some items
+            #app.processEvents()
+            #splash.showMessage("Eurocam .. Loading model")
+
+            filename = glb.model[0]            
             self.md = ECM.ModelWindow()
-            self.md.load_data(filename)
+            self.md.load_data(filename)                
+        
+            #splash.finish()            
+
         else:
-            self.myYesDiag(self.msg_i01,self.msg_18m,"",QMessageBox.Information)
+            self.my_diag(self.msg_i01,self.msg_18m,"",QMessageBox.Information)
 
 
-    def HelpText(self):
+    def help_text(self):
         self.RightTB.setCurrentIndex(1) # select the Text ToolBox
         locale = QtCore.QLocale.system().name()
         helpfile = EC_L.search_paths("eurocam_help-" + locale +".txt")
@@ -426,29 +400,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif EC_L.search_paths("eurocam_help.txt"):
             self.TWid.setSource(EC_L.search_paths("eurocam_help.txt"))
         else:
-            self.TWid.setHtml(self.msg_02m)            
+            self.TWid.setHtml(self.msg_02m)
 
-    def UnitChange(self):
-        # FIXME add the action  
+    def unit_change(self):
+        # FIXME add the action
         if self.menuInch.isChecked() == True:
-            print "unit inches"
+            print "eurocam:MW: unit inches"
         else:
             print "unit mm"
 
-    def SetGbaseName(self):
-        # FIXME add the action          
-        print "menu gcode basename"
+    def set_gbasename(self):
+        self.ask_basename()
+        self.IL_2.setText("Basename Set")
+        self.IL_2.setToolTip("Basename = <b>{0}</b>".format(glb.basename))
+        
+    def about_Qt(self):
+        QMessageBox.about(self,self.msg_a02t,self.msg_a02m)
 
-    def About_Qt(self):
-        QMessageBox.about(self,self.msg_a02t,self.msg_a02m) 
-
-
-       
     def closeEvent(self, event):
         '''
-        called by Exit menu item trough self.close() 
-        and triggered also pressing the close button on the titlebar      
-        event : QCloseEvent 
+        called by Exit menu item trough self.close()
+        and triggered also pressing the close button on the titlebar
+        event : QCloseEvent
         '''
         msgBox = QMessageBox()
         msgBox.setText(self.msg_01t)
@@ -459,9 +432,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ret = msgBox.exec_()
         event.ignore()
         if ret == QMessageBox.Yes:
-            self.Log.append("Writing Settings") 
-            self.writeSettings()
-            # in case something is worng with the creation of the model we
+            self.Log.append("Writing Settings")
+            self.write_ini_settings()
+            # in case something go wrong with the creation of the model we
             # can close the window
             try:
                 self.md.close()
@@ -471,48 +444,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif ret == QMessageBox.Cancel:
             event.ignore()
 
-  
+
     ######################################
-    #                                    #     
+    #                                    #
     # Miscellaneous actions              #
     #                                    #
     ######################################
 
 
-
-    def MainTabchosen(self,value):
+    def ask_basename(self):
+        ans = self.ask_gname("Messaggio"," NGC File ")
+        if ans == "KO":
+            return
+        else:
+            glb.basename = ans
+            
+    def main_tab_chosen(self,value):
         if value == 2:
-            EC_UA.toolPaint(self)
+            EC_UA.tool_paint(self)
         elif value == 3:
             text = self.WPCB.currentText()
             self.change_wp(text)
+        elif value == 4:
+            text = self.PCWPCB.currentText()
+            self.change_wp(text)
         else:
-            print "Tab number = ",value
-            EC_UA.clearGV(self)
+            if glb.debug[0] == 1:
+                print "Tab number = ",value
+            EC_UA.clear_graphics_win(self)
 
-
-    def maybeSave(self):
-        if glb.ModelMod is True:
-            ret = QMessageBox.warning(self, "Application",
-                    "The document has been modified.\nDo you want to save "
-                    "your changes?",
-                    QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
-            if ret == QMessageBox.Save:
-                return self.save()
-            elif ret == QMessageBox.Cancel:
-                return False
-        return True
-
-
-    
     def model_info(self,filename):
         self.IL_1.setText("Model Loaded")
         self.IL_1.setToolTip("Model name = <b>{0}</b>".format(filename))
         self.IL_2.setText("Basename Set")
-        self.IL_2.setToolTip("Basename = <b>{0}</b>".format(glb.basename))        
+        self.IL_2.setToolTip("Basename = <b>{0}</b>".format(glb.basename))
         self.MdTName.setText("<b>{0}</b>".format(filename))
-       
-        self.load_model()        
+
+        self.load_model()
 
     def load_model(self):
         filename = glb.model[0]
@@ -520,13 +488,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.md.load_data(filename)
         glb.M_Load = True
         dims = self.md.getBB("md")
-        EC_UA.writeMddata(self,dims)
+        EC_UA.write_model_data(self,dims)
 
     def change_wp(self,value):
         EC_UA.writeWPdata(self,value)
-        print glb.wpdata
+        if glb.debug[4] == 1:        
+            print glb.wpdata
+
         if glb.M_Load == True:
-            self.wp_plot()        
+            self.wp_plot()
 
     def wp_plot(self):
         xmin = float(glb.wpdata[0])
@@ -539,22 +509,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dunit = "mm"
         else:
             dunit = "inch"
-        self.md.wp_create(xmin, xmax, ymin, ymax, zmin, zmax, dunit)        
-
-        
-    def askBasename(self):
-        ans = self.askGname("Messaggio"," NGC File ")
-        if ans == "KO":
-            return
-        else:
-            glb.basename = ans
-
+        self.md.wp_create(xmin, xmax, ymin, ymax, zmin, zmax, dunit)
 
     def save(self):
         self.statusbar.showMessage("save selected")
-
-
-
 
     def create_path_and_inifile(self,path,inifile):
         try:
@@ -564,69 +522,71 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 raise
         try:
             inifile = os.path.join(path,inifile)
-            print inifile                       
+            if debug[0] == 1:
+                print inifile
             with open(inifile,'w') as file:
                 file.close()
         except IOError as e:
             msgtit = "Warning"
             msgtxt = "Unable to create file {0} in {1}".format(inifile,path)
-            icon = QMessageBox.Information                
-            self.myYesDiag(msgtit,msgtxt,"",icon)
+            icon = QMessageBox.Information
+            self.my_diag(msgtit,msgtxt,"",icon)
 
 
     ###################################
     #                                 #
-    # Dialog used in the interface    #         
+    # Dialog used in the interface    #
     #                                 #
     ###################################
 
 
-    def dataModDiag(self,ctst,msginfo):
+    def data_mod_diag(self,ctst,msginfo):
         mtxt = "<table border='1' width = '300'>"
         tln0 = "<tr><td> {0} </td><td align='right'>{1:.3}</td><td align='right'>{2:.3}</td></tr>"
         tln1 = "<tr><td> {0} </td><td align='right'>{1}</td><td align='right'>{2}</td></tr>"
         tln2 = "<tr><td> {0} </td><td>{1}</td><td>{2}</td></tr>"
         if ctst == 0: # Tool Data
             for i,v in enumerate(glb.datahead):
-                print i,v 
+                if glb.debug[4] == 1 :                
+                    print i,v
                 if i in (1,3,4,5): # float
-                    mtxt = mtxt + tln0.format(v,glb.oldata[i],glb.newdata[i]) 
+                    mtxt = mtxt + tln0.format(v,glb.oldata[i],glb.newdata[i])
                 elif i in (0,2,6,7): # integer
-                    mtxt = mtxt + tln1.format(v,glb.oldata[i],glb.newdata[i]) 
+                    mtxt = mtxt + tln1.format(v,glb.oldata[i],glb.newdata[i])
                 else: # text no special formatting
-                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i])                     
+                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i])
         elif ctst == 1: # Machine data
             for i,v in enumerate(glb.datahead):
-                #if glb.debug:
-                #    print "I V old New =>>",i,v,glb.oldata[i],glb.newdata[i]
+                if glb.debug[4] == 1:
+                    print "I V old New =>>",i,v,glb.oldata[i],glb.newdata[i]
                 if i in (0,1,2,3,4,5): # float
-                    mtxt = mtxt + tln0.format(v,glb.oldata[i],glb.newdata[i]) 
+                    mtxt = mtxt + tln0.format(v,glb.oldata[i],glb.newdata[i])
                 elif i == 6 : # integer
-                    mtxt = mtxt + tln1.format(v,glb.oldata[i],glb.newdata[i]) 
+                    mtxt = mtxt + tln1.format(v,glb.oldata[i],glb.newdata[i])
                 else: # text no special formatting
-                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i]) 
+                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i])
         elif ctst == 2: # WP data
             for i,v in enumerate(glb.datahead):
-                if glb.debug > 3:
+                if glb.debug[4] == 1:
                     print "I V old New =>>",i,v,glb.oldata[i],glb.newdata[i]
                 if i in (0,1,2,3,4,5):  # float
-                    mtxt = mtxt + tln0.format(v,glb.oldata[i],glb.newdata[i]) 
-                elif i == 6: # integer 
-                    mtxt = mtxt + tln1.format(v,glb.oldata[i],glb.newdata[i]) 
+                    mtxt = mtxt + tln0.format(v,glb.oldata[i],glb.newdata[i])
+                elif i == 6: # integer
+                    mtxt = mtxt + tln1.format(v,glb.oldata[i],glb.newdata[i])
                 else: # text no special formatting
-                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i]) 
-     
-        mtxt = mtxt + "</table>"       
+                    mtxt = mtxt + tln2.format(v,glb.oldata[i],glb.newdata[i])
 
-        ret = self.myYesDiag("",mtxt, msginfo,QMessageBox.Question)
-             
+        mtxt = mtxt + "</table>"
+
+        ret = self.my_diag("",mtxt, msginfo,QMessageBox.Question)
+
         if ret == "OK":
             return "OK"
         elif ret == "KO":
-            return "KO" 
+            return "KO"
 
-   
-    def myYesDiag(self,msgtit,msgtxt,msginfo = "" ,icon = QMessageBox.Warning ):
+
+    def my_diag(self,msgtit,msgtxt,msginfo = "" ,icon = QMessageBox.Information ):
         msgBox = QMessageBox()
         msgBox.setText(msgtxt)
         msgBox.setInformativeText(msginfo)
@@ -637,24 +597,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if ret == QMessageBox.Yes:
             return "OK"
         elif ret == QMessageBox.Cancel:
-            return "KO" 
-        return "KO" 
+            return "KO"
+        return "KO"
 
 
-    def askMoTname(self,O_data,O_type):
+    def ask_name(self,O_data,O_type):
         msg = self.msg_06t.format(O_type)
         text, ok = QInputDialog.getText(self, msg,self.msg_06m)
-        
+
         O_name = text.replace (" ", "_")
-    
+
         if O_name in O_data:
             msgtxt = self.msg_07m.format(O_name)
-            self.myYesDiag("",msgtxt,"",QMessageBox.Warning)
+            self.my_diag("",msgtxt,"",QMessageBox.Warning)
             return "KO"
         else:
             return O_name
 
-    def askGname(self,msg,type):
+    def ask_gname(self,msg,type):
         msg = self.msg_06t.format(type)
         text, ok = QInputDialog.getText(self, msg,self.msg_06m)
         O_name = text.replace (" ", "_")
@@ -668,78 +628,78 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def tool_chosen(self, text):
-        EC_UA.writeTooldata(self,text)
+        EC_UA.write_tool_data(self,text)
 
 
-    def toolNew(self):
-        ans = self.askMoTname(glb.Tools,glb.tool_sin)
+    def tool_new(self):
+        ans = self.ask_name(glb.Tools,glb.tool_sin)
         if ans == "KO":
             return
         else:
             glb.mot_name = ans
             glb.NewTool = True
             glb.EditTool = True
-            EC_UA.greyToolB(self,False)            
-            EC_UA.clearToolUI(self)
+            EC_UA.greyToolB(self,False)
+            EC_UA.clear_tool_ui(self)
             glb.oldata = [0,0.0,0.0,0.0,0.0,0.0,0,0,""]
 
 
-    def toolMod(self):
+    def tool_mod(self):
         glb.EditTool = True
         EC_UA.greyToolB(self,False)
         ttype = int(self.TGCBTyp.currentIndex())
-        EC_UA.toolConstraint(self,ttype)
+        EC_UA.set_tool_limits(self,ttype)
         EC_UA.toolMask(self,False)
         glb.oldata = EC_UA.readTool(self)
         glb.mod_mot_name = self.ToolCB.currentText()
-        
 
 
-    def toolDel(self):
+
+    def tool_del(self):
         if self.ToolCB.count() < 2: #2
             msgtxt = self.msg_05m.format(glb.tool_sin,glb.tool_plu)
-            self.myYesDiag("",msgtxt,"",QMessageBox.Warning) 
+            self.my_diag("",msgtxt,"",QMessageBox.Warning)
             return
-        else:    
+        else:
             glb.mod_mot_name = self.ToolCB.currentText()
             glb.oldata = glb.Tools[glb.mod_mot_name]
             glb.newdata = [0,0.0,0.0,0.0,0,0,0,0,""]
-            
-            glb.datahead= (self.TGLTyp.text(), self.TGLDia.text(), 
+
+            glb.datahead= (self.TGLTyp.text(), self.TGLDia.text(),
                    self.TGLRad.text(), self.TGLLen.text(), self.TGLOvl.text(),
-                   self.TGLShd.text(), self.TGLFlu.text(), self.TGLCc.text(), 
+                   self.TGLShd.text(), self.TGLFlu.text(), self.TGLCc.text(),
                    self.TGLnote.text())
-            
-            ans = self.dataModDiag(0,self.msg_04m.format(glb.tool_sin))               
+
+            ans = self.data_mod_diag(0,self.msg_04m.format(glb.tool_sin))
             if ans == "OK":
                 del glb.Tools[glb.mod_mot_name]
-                self.toolUpdate()
+                self.tool_update()
             else:
                 pass
 
-      
-    def toolConf(self):
+
+    def tool_conf(self):
         glb.newdata = EC_UA.readTool(self)
         if glb.newdata[3] > glb.newdata[4]:
             msgtxt = self.msg_11m
-            self.myYesDiag("",msgtxt,"",QMessageBox.Warning)                             
-            return        
+            self.my_diag("",msgtxt,"",QMessageBox.Warning)
+            return
         EC_UA.toolMask(self,True)
         glb.EditTool = False
 
-        glb.datahead = (self.TGLTyp.text(), self.TGLDia.text(), 
-               self.TGLRad.text(), self.TGLLen.text(), self.TGLOvl.text(), 
+        glb.datahead = (self.TGLTyp.text(), self.TGLDia.text(),
+               self.TGLRad.text(), self.TGLLen.text(), self.TGLOvl.text(),
                self.TGLShd.text(), self.TGLFlu.text(), self.TGLCc.text(),
                self.TGLnote.text())
-               
-        ans = self.dataModDiag(0,self.msg_03t)               
+
+        ans = self.data_mod_diag(0,self.msg_03t)
         if ans == "OK":
             if glb.NewTool is False:
                 glb.Tools[glb.mod_mot_name] = glb.newdata
-                self.toolUpdate()
+                self.tool_update()
             else:
                 glb.Tools[glb.mot_name] = glb.newdata
-                self.toolUpdate()
+                self.tool_update()
         else:
             pass
 
@@ -747,33 +707,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         EC_UA.greyToolB(self,True)
 
 
-    def toolUpdate(self):
-        EC_L.updateTool(self)                
+    def tool_update(self):
+        EC_L.updateTool(self)
         EC_UA.popToolUI(self)
-        EC_UA.writeTooldata(self,self.ToolCB.currentText())
+        EC_UA.write_tool_data(self,self.ToolCB.currentText())
         self.Log.append("Re Populating UI Tooltable")
 
-    def TGCBCc_State(self,value):
+    def tool_cb_state(self,value):
        key = self.ToolCB.currentText() # the name of the tool
        tooldata = glb.Tools[key]
-       
-       if glb.EditTool is False:            
-           self.TGCBCc.setCurrentIndex(int(tooldata[5]))               
+
+       if glb.EditTool is False:
+           self.TGCBCc.setCurrentIndex(int(tooldata[5]))
        else:
            pass
 
-    def TGCBTyp_State(self,value):
+    def tool_type_state(self,value):
        key = self.ToolCB.currentText() # the name of the tool
        tooldata = glb.Tools[key]
-       
-       if glb.EditTool is False:            
-           self.TGCBTyp.setCurrentIndex(int(tooldata[0]))               
+
+       if glb.EditTool is False:
+           self.TGCBTyp.setCurrentIndex(int(tooldata[0]))
        else:
            ttype = int(self.TGCBTyp.currentIndex())
-           EC_UA.toolConstraint(self,ttype)
+           EC_UA.set_tool_limits(self,ttype)
            EC_UA.toolMask(self,False)
 
-           
+
     ################################################
     #                                              #
     # Machine Tab related actions                  #
@@ -785,17 +745,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         EC_UA.writeMachdata(self,self.MachCB.currentText())
 
 
-    def mcoord_State(self,value):
+    def mach_coord_state(self,value):
         key = self.MachCB.currentText() # the name of the tool
-        machdata = glb.Machs[key]        
+        machdata = glb.Machs[key]
         if glb.EditMach is False:
-            self.MGCoCB.setCurrentIndex(int(machdata[6]))               
+            self.MGCoCB.setCurrentIndex(int(machdata[6]))
         else:
             pass
 
-    
-    def machNew(self):
-        ans = self.askMoTname(glb.Machs,glb.mach_sin)
+
+    def mach_new(self):
+        ans = self.ask_name(glb.Machs,glb.mach_sin)
         if ans == "KO":
             return
         else:
@@ -804,43 +764,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             glb.EditMach = True
             EC_UA.greyMachB(self,False)
             EC_UA.clearMachUI(self)
-            # Set the Machine mask readable 
+            # Set the Machine mask readable
             EC_UA.machMask(self,False)
             glb.oldata = [0.0,0.0,0.0,0.0,0.0,0.0,0,"","",""]
 
 
-    def machMod(self):
+    def mach_mod(self):
         glb.EditMach = True
         EC_UA.greyMachB(self,False)
         EC_UA.machMask(self,False)
         glb.oldata = EC_UA.readMach(self)
         glb.mod_mot_name = self.MachCB.currentText()
-        
-        
-    def machDel(self):
+
+
+    def mach_del(self):
         if self.MachCB.count() < 2:
             msgtxt = self.msg_05m.format(glb.mach_sin,glb.mach_plu)
-            self.myYesDiag("",msgtxt,"",QMessageBox.Warning) 
+            self.my_diag("",msgtxt,"",QMessageBox.Warning)
             return
-        else:    
+        else:
             glb.mod_mot_name = self.MachCB.currentText()
             glb.oldata = glb.Machs[glb.mod_mot_name]
             glb.newdata = [0.0,0.0,0.0,0.0,0.0,0.0,0,"","",""]
-            
+
             glb.datahead = (self.MGLTX.text(), self.MGLTY.text(), self.MGLTZ.text(),
                         self.MGLFX.text(), self.MGLFY.text(), self.MGLFZ.text(),
                         self.MGLCo.text(), self.MGLnote.text(),
                         self.MGLpre.text(), self.MGLpost.text() )
-            
-            ans = self.dataModDiag(0,self.msg_04m.format(glb.mach_sin))               
+
+            ans = self.data_mod_diag(0,self.msg_04m.format(glb.mach_sin))
             if ans == "OK":
                 del glb.Machs[glb.mod_mot_name]
-                self.machUpdate()
+                self.mach_update()
             else:
                 pass
 
 
-    def machConf(self):
+    def mach_conf(self):
         glb.newdata = EC_UA.readMach(self)
         EC_UA.machMask(self,True)
         glb.EditMach = False
@@ -848,15 +808,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.MGLFX.text(), self.MGLFY.text(), self.MGLFZ.text(),
                         self.MGLCo.text(), self.MGLnote.text(),
                         self.MGLpre.text(), self.MGLpost.text() )
-               
-        ans = self.dataModDiag(1,self.msg_03t)               
+
+        ans = self.data_mod_diag(1,self.msg_03t)
         if ans == "OK":
             if glb.NewMach is False:
                 glb.Machs[glb.mod_mot_name] = glb.newdata
-                self.machUpdate()
+                self.mach_update()
             else:
                 glb.Machs[glb.mot_name] = glb.newdata
-                self.machUpdate()
+                self.mach_update()
         else:
             pass
 
@@ -864,8 +824,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         EC_UA.greyMachB(self,True)
 
 
-    def machUpdate(self):
-        EC_L.updateMach(self)                
+    def mach_update(self):
+        EC_L.updateMach(self)
         EC_UA.popMachUI(self)
         EC_UA.writeMachdata(self,self.MachCB.currentText())
         self.Log.append("Re Populating UI Machines table")
@@ -879,11 +839,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def wp_chosen(self, value):
         self.PCWPCB.setCurrentIndex(self.WPCB.currentIndex())
-        self.change_wp(value)        
+        self.change_wp(value)
 
 
-    def wpNew(self):
-        ans = self.askMoTname(glb.WorkPCs,glb.wp_sin)
+    def wp_new(self):
+        ans = self.ask_name(glb.WorkPCs,glb.wp_sin)
         if ans == "KO":
             return
         else:
@@ -892,25 +852,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             glb.EditWP = True
             EC_UA.greyWPB(self,False)
             EC_UA.clearWPUI(self)
-            # Set the WP mask readable 
+            # Set the WP mask readable
             EC_UA.wpMask(self,False)
-            glb.oldata = [0.0,0.0,0.0,0.0,0.0,0.0,0,""]        
-        
-    def wpMod(self):    
+            glb.oldata = [0.0,0.0,0.0,0.0,0.0,0.0,0,""]
+
+    def wp_mod(self):
         glb.EditWP = True
         EC_UA.greyWPB(self,False)
         EC_UA.wpMask(self,False)
         glb.oldata = EC_UA.readWP(self)
-        glb.mod_mot_name = self.WPCB.currentText()        
-        
-    def wpDel(self):     
-        print "self.WPDelPB.clicked"
-        # TODO Check the working
+        glb.mod_mot_name = self.WPCB.currentText()
+
+    def wp_del(self):
         if self.WPCB.count() < 2:
             msgtxt = self.msg_05m.format(glb.wp_sin,glb.wp_plu)
-            self.myYesDiag("",msgtxt,"",QMessageBox.Warning) 
+            self.my_diag("",msgtxt,"",QMessageBox.Warning)
             return
-        else:    
+        else:
             glb.mod_mot_name = self.WPCB.currentText()
             glb.oldata = glb.WorkPCs[glb.mod_mot_name]
             glb.newdata = [0.0,0.0,0.0,0.0,0.0,0.0,0,""]
@@ -922,20 +880,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             "{0} lower".format(self.WPGLDZ.text()),
                             "{0} upper".format(self.WPGLDZ.text()),
                             self.WPGLMat.text(),
-                            self.WPGLNote.text() ) 
-                            
-            ans = self.dataModDiag(2,self.msg_04m.format(glb.wp_sin))               
+                            self.WPGLNote.text() )
+
+            ans = self.data_mod_diag(2,self.msg_04m.format(glb.wp_sin))
             if ans == "OK":
                 del glb.WorkPCs[glb.mod_mot_name]
-                self.wpUpdate()
+                self.wp_update()
             else:
-                pass        
-        
-    def wpConf(self):
+                pass
+
+    def wp_conf(self):
         glb.newdata = EC_UA.readWP(self)
         EC_UA.wpMask(self,True)
         glb.EditWP = False
-        print glb.newdata
+        if glb.debug[4] == 1:
+            print glb.newdata
         glb.datahead = ("{0} lower".format(self.WPGLDX.text()),
                         "{0} upper".format(self.WPGLDX.text()),
                         "{0} lower".format(self.WPGLDY.text()),
@@ -944,28 +903,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         "{0} upper".format(self.WPGLDZ.text()),
                         self.WPGLMat.text(),
                         self.WPGLNote.text() )
-               
-        ans = self.dataModDiag(2,self.msg_03t)
+
+        ans = self.data_mod_diag(2,self.msg_03t)
         if ans == "OK":
             if glb.NewWP is False:
-                print "Modifica WP"
-                print "Prima ", glb.WorkPCs[glb.mod_mot_name]
+                if glb.debug[4] == 1:                
+                    print "Prima ", glb.WorkPCs[glb.mod_mot_name]
                 glb.WorkPCs[glb.mod_mot_name] = glb.newdata
-                print "Dopo ", glb.WorkPCs[glb.mod_mot_name]                
-                self.wpUpdate()
+                if glb.debug[4] == 1:
+                    print "Dopo ", glb.WorkPCs[glb.mod_mot_name]
+                self.wp_update()
             else:
-                print "Nuovo WP"                
                 glb.WorkPCs[glb.mot_name] = glb.newdata
-                self.wpUpdate()
+                self.wp_update()
         else:
             pass
 
         glb.NewWP = False
-        EC_UA.greyWPB(self,True)        
+        EC_UA.greyWPB(self,True)
 
 
-    def wpUpdate(self):
-        EC_L.updateWP(self)                
+    def wp_update(self):
+        EC_L.updateWP(self)
         EC_UA.popWPUI(self)
         EC_UA.writeWPdata(self,self.WPCB.currentText())
         self.Log.append("Re Populating UI WorkPieces table")
@@ -981,85 +940,88 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.PCPBCt.setVisible(action)
         self.PCPBGenG.setVisible(action)
         self.GCPB1.setVisible(action)
-        self.GCPB2.setVisible(action)        
- 
+        self.GCPB2.setVisible(action)
+
     def pc_mach_chosen(self,value):
-        glb.machdata = glb.Machs[value]        
-        self.pc_feed_data()          
+        # Set the same machine in the Machine Tab
+        self.MachCB.setCurrentIndex(self.PCMachCB.currentIndex())
+        EC_UA.writeMachdata(self,self.MachCB.currentText())
+        # Do the other actions
+        glb.machdata = glb.Machs[value]
+        self.pc_feed_data()
         # Deactivate the buttons because some parameters are changed
         self.pc_buttons(False)
-   
+
 
     def pc_tool_chosen(self,value):
-        glb.t_data = glb.Tools[value]              
-        self.pc_step_data()          
+        # Set the same tool in the Tools Tab
+        self.ToolCB.setCurrentIndex(self.PCToolCB.currentIndex())
+        EC_UA.write_tool_data(self,self.ToolCB.currentText())
+        # Do the other actions
+        glb.t_data = glb.Tools[value]
+        self.pc_step_data()
         # Deactivate the buttons because some parameters are changed
         self.pc_buttons(False)
-        # TODO set the tool also in the tooltab and the same for the machine
-        # and wp
 
 
     def pc_wp_chosen(self,value):
-        self.WPCB.setCurrentIndex(self.PCWPCB.currentIndex())        
-        self.change_wp(value)        
+        # Set the same WP in the WP Tab
+        self.WPCB.setCurrentIndex(self.PCWPCB.currentIndex())
+        self.change_wp(value)
+        # Do the other actions
         # TODO insert the correction for feed and step based on material
         # properties?
-        #self.pc_feed_data() 
+        #self.pc_feed_data()
         #self.pc_step_data()
-                        
         # Deactivate the buttons because some parameters are changed
         self.pc_buttons(False)
 
 
-    def pc_createTask(self):
+    def pc_create_task(self):
         # TODO the action for create Task
         self.MainTab.setCurrentIndex(6)
 
 
-    def pc_genG(self):
+    def pc_gen_g(self):
         self.MainTab.setCurrentIndex(5)
-        EC_UA.greyGC(self,True)        
+        EC_UA.greyGC(self,True)
         self.GCPB1.setVisible(True)
         #self.GCPB2.setVisible(True)
-    
+
 
     def pc_calc_task(self):
-        self.Log.append("Collecting task data")
-        # Deactivate the controls 
-
-        #self.pc_coll_data()
         # Run the data check and the preliminary calculations
         ret = self.pc_calc_data()
-        
+
         if ret == "KO":
             # or do something
             pass
         else:
             pass
             # or do something
-        
+
     def pc_step_data(self):
         diameter = float(glb.t_data[1])
         c_length = float(glb.t_data[3])
         self.PCTTd.setText("{0:.4} {1}".format(diameter,glb.tunit))
         # Step down increment is obtained from the rules of thumb:
-        # diameter/2 
+        # diameter/2
         # TODO consider the material data
         # and then tuned by the spinbox controls
         preset = float(diameter/2)
         self.PCSBXYovl.setValue(preset)
         self.PCSBXYovl.setRange(0.000, diameter)
-        self.PCSBZsd.setValue(preset)    
+        self.PCSBZsd.setValue(preset)
         self.PCSBZsd.setRange(0.000, c_length)
-        
+
     def pc_feed_data(self):
         # XY feed is the minimun between X and Y feedrate
-        # TODO consider the material data    
+        # TODO consider the material data
         xyfeed = min(float(glb.machdata[3]),float(glb.machdata[4]))
         self.PCSBXYfc.setValue(xyfeed)
         zfeed = float(glb.machdata[5])
         self.PCSBZfc.setValue(zfeed)
-          
+
     def pc_calc_data(self):
         EC_L.calc_process(self)
 
@@ -1071,34 +1033,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     ################################################
 
 
-    def genNGC(self):
-        self.readGCChB()
+    def gen_ngc(self):
+        self.read_gcodetab_checkboxes()
         # the filename has to be "pathgen.ini" because it is hardcoded
         # in ec_tpath.py as the input file
         p_fname = "./pathgen.ini"
         ans = EC_L.writePathfile(self,p_fname,"ngc")
         if ans == "OK":
-            # call the external program to generate Gcode
-            # in non blocking mode it create anew process and comunicate the 
-            # PID number
-            pid = Popen(["python", "ec_tpath.py"]).pid
+            # call the ec_tpath.py to generate Gcode in non blocking mode
+            # and emit a message with PID number of the process
+            pid = Popen(["python2", "ec_tpath.py"]).pid
             msgtxt = self.msg_19m.format(pid)
-            self.myYesDiag("",msgtxt,"",QMessageBox.Information) 
+            self.my_diag("",msgtxt,"",QMessageBox.Information)
         else:
             return
 
-    def readGCChB(self):
-        # TODO read the checkboxes and set the variables to generate the G-Code
+    def read_gcodetab_checkboxes(self):
+        # Read the checkboxes and set the variables to generate the G-Code
         glb.gcodec = []
         for obj in (self.GCmodel, self.GCmachine, self.GCtool, self.GCwp,
                     self.GCtp, self.GCverbose, self.GCview):
             glb.gcodec.append(obj.isChecked())
+        # retrieve the content of the decimal SB self.GCdecimals
+        glb.gcodec.append(self.GCSBd.value())
 
-        glb.gcodec.append(self.GCSBd.value())        
-        # retrieve the content of the decimal SB self.GCdecimals       
-        print glb.gcodec    
+        if glb.debug[2] == 1:
+            print glb.gcodec
 
-    def saveNGCP(self):
+    def save_ngc_pref(self):
+        # TODO add the proper actions
         print "Save NGC pressed"
 
     ################################################
@@ -1107,13 +1070,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     #                                              #
     ################################################
 
+        # TODO add the Task creations 
 
-    def CreateTask(self):
+    def create_task(self):
+
         p_fname = "./pathfile.ini"
-        EC_L.writePathfile(self,p_fname,"tsk")            
+        EC_L.writePathfile(self,p_fname,"tsk")
 
 
-    
 ##########################################
 #                                        #
 # Main Loop                              #
@@ -1121,39 +1085,39 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 ##########################################
 
 def main():
-    if glb.debug > 4:
+    global app
+    if glb.debug[0] == 1:
         print "main init"
         print __file__
         print os.path.join(os.path.dirname(__file__), '..')
         print os.path.dirname(os.path.realpath(__file__))
-        print os.path.abspath(os.path.dirname(__file__))    
-        
+        print os.path.abspath(os.path.dirname(__file__))
+
     locale = QtCore.QLocale.system().name()
     translator = QtCore.QTranslator()
     #translator.load("qt_" + locale, QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
-    r = EC_L.search_paths(locale + ".qm") 
+    r = EC_L.search_paths(locale + ".qm")
     translator.load(r)
-   
+
     app = QApplication(sys.argv)
     app.installTranslator(translator)
-
-    frame = MainWindow()
-    frame.show()    
-    app.exec_()
-"""
-def main():
-    app = QApplication(sys.argv)
-    pixmap = QPixmap(":/splash.png")
+    # init the splash screen
+    pixmap = QPixmap("./splash.png")
     splash = QSplashScreen(pixmap)
     splash.show()
     app.processEvents()
-    ...
-    window = QMainWindow()
-    window.show()
-    splash.finish(&window)
-    return app.exec_()
+    # Loading some items
+    splash.showMessage("Eurocam .. Loading modules")
 
-"""
+    qApp.processEvents()    
+    # end of the splah init
+
+    frame = MainWindow()
+    #frame.show() # is done in the program 
+
+    splash.finish(frame)
+   
+    app.exec_()
 
 if __name__ == '__main__':
     main()

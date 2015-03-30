@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'eurocam.ui'
 #
-# Created: Thu Mar 26 17:04:52 2015
+# Created: Sun Mar 29 10:18:07 2015
 #      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -221,7 +221,7 @@ class Ui_MainWindow(object):
         self.ToolNameL.setGeometry(QtCore.QRect(10, 20, 82, 21))
         self.ToolNameL.setObjectName("ToolNameL")
         self.gridLayoutWidget = QtGui.QWidget(self.ToolsTab)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 60, 331, 325))
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 50, 331, 325))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtGui.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -727,7 +727,7 @@ class Ui_MainWindow(object):
         self.GV.setObjectName("GV")
         self.RightTB.addItem(self.GWid, "")
         self.TAL = QtGui.QWidget()
-        self.TAL.setGeometry(QtCore.QRect(0, 0, 98, 28))
+        self.TAL.setGeometry(QtCore.QRect(0, 0, 100, 30))
         self.TAL.setObjectName("TAL")
         self.TWid = QtGui.QTextBrowser(self.TAL)
         self.TWid.setGeometry(QtCore.QRect(0, 0, 381, 431))
@@ -782,7 +782,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuHelp.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.MainTab.setCurrentIndex(4)
+        self.MainTab.setCurrentIndex(2)
         self.MachNB.setCurrentIndex(0)
         self.RightTB.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)

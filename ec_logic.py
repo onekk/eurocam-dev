@@ -26,7 +26,7 @@ def search_paths(file_name):
         if os.path.isfile(path):
             return path
 
-def setUnit(self):
+def set_unit(self):
     if int(glb.unit) == 0 :
         glb.tunit = self.mm
         glb.spunit = " mm/min"
@@ -45,8 +45,8 @@ def readTooltable(self):
         for name in config.sections():
             for data in glb.Tooldata:
                 tdata.append(config.get(name, data))
-            if glb.debug > 3:    
-                print tdata
+            if glb.debug[4] == 1:    
+                print "ec_logic:readTooltable > tdata = {0} ".format(tdata)
              
             glb.Tools[str(name)] = tdata
             tdata = []
@@ -59,8 +59,8 @@ def writeTooltable(self):
     for k,v in glb.Tools.iteritems():
         config.add_section(k)
         for i,d in enumerate(glb.Tooldata):
-            if glb.debug > 3:
-                print k,d,str(v[i])
+            if glb.debug[4] == 1:
+                print "ec_logic:writeTooltable > k,v,str(i) = ", k,d,str(v[i])
             config.set(k,d,str(v[i]))
     with open(glb.f_tooltable, 'wb') as configfile:
         config.write(configfile)    
@@ -93,6 +93,8 @@ def writeMachtable(self):
     for k,v in glb.Machs.iteritems():
         config.add_section(k)
         for i,d in enumerate(glb.Machdata):
+            if glb.debug[4] == 1:
+                print "ec_logic:writeMachtable > k,d,str(v[i]) = ", k,d,str(v[i])            
             config.set(k,d,str(v[i]))
     with open(glb.f_machtable, 'wb') as configfile:
         config.write(configfile)    
@@ -126,16 +128,51 @@ def writeWPtable(self):
     for k,v in glb.WorkPCs.iteritems():
         config.add_section(k)
         for i,d in enumerate(glb.WorkPcdata):
+            if glb.debug[4] == 1:
+                print "ec_logic:writeWPtable > k,d,str(v[i]) = ", k,d,str(v[i])            
             config.set(k,d,str(v[i]))
     with open(glb.f_wptable, 'wb') as configfile:
         config.write(configfile)    
   
 def updateWP(self):
-    print glb.WorkPCs
+    if debug[4] == 1:
+        print "ec_logic:updateWP > glb.WorkPCs",glb.WorkPCs
     writeWPtable(self)
     self.Log.append("Re Writing WPTable")            
     readWPtable(self)
     self.Log.append("Re Read WPTable")
+
+
+############################################
+#                                          #
+# Files creation usually at the first run  #
+#                                          #
+############################################
+
+
+def create_toolfile(self,path):
+    msgtxt = self.msg_15m.format(path)
+    self.my_diag(self.msg_i01,msgtxt,"")
+    self.create_path_and_inifile(path,glb.toolf_name)
+    glb.f_tooltable = glb.ini_search_paths(glb.toolf_name)
+    writeTooltable(self)
+
+
+def create_machfile(self,path):
+    msgtxt = self.msg_16m.format(path)
+    self.my_diag(self.msg_i01,msgtxt,"")
+    self.create_path_and_inifile(path,glb.machf_name)
+    glb.f_machtable = glb.ini_search_paths(glb.machf_name)
+    writeMachtable(self)
+
+
+def create_wpfile(self,path):
+    msgtxt = self.msg_17m.format(path)
+    self.my_diag(self.msg_i01,msgtxt,"")
+    self.create_path_and_inifile(path,glb.wp_name)
+    glb.f_wptable = glb.ini_search_paths(glb.wp_name)
+    writeWPtable(self)
+
 
 ############## Path generation 
 
@@ -144,7 +181,7 @@ def writePathfile(self,p_fname,action):
 
     if os.path.exists(p_fname):
         msgtxt = self.msg_13m.format(p_fname)
-        ret = self.myYesDiag("",msgtxt)
+        ret = self.my_diag("",msgtxt)
         if ret == "OK":
             pass
         else:
@@ -268,9 +305,8 @@ def calc_process(self):
         t_name = self.PCToolCB.currentText()
         #retrieve the wp coordinates from the display window
         glb.wpdim = self.md.get_wp_dim()
-        if glb.debug > 0:        
+        if glb.debug[3] == 1:        
             print glb.wpdim
-            #return # FIXME provvisorio        
 
         zmin = float(glb.wpdim[4])               
         zmax = float(glb.wpdim[5])
@@ -280,15 +316,17 @@ def calc_process(self):
         # TODO if wp_h > max H_working emit a warning
     
         feedrate = self.PCSBXYfc.value()
-        print "feedrate {0}".format(feedrate)
+        if glb.debug[3] == 1:        
+            print "ec_logic:calc_process > feedrate {0}".format(feedrate)
         
         plungerate = self.PCSBZfc.value()
         zpc = self.PCSBZsd.value()
 
         xyovl = self.PCSBXYovl.value()
        
-        # Select strategy for now it only cosmetic as only one strategy is
-        # implemented  
+        # Select the cutting strategy
+        # for now it only cosmetic as only one strategy is implemented
+        # an
         for i,obj in enumerate((self.PCSTRB1, self.PCSTRB2, self.PCSTRB3, self.PCSTRB4)):
             if obj.isChecked():
                 if i == 0:
@@ -297,9 +335,9 @@ def calc_process(self):
                 elif i == 1:
                     strat = "NC"
                     break
-        else:
+        else: # if we arrive here none is selected
              msgtxt = self.msg_12m
-             self.myYesDiag("",msgtxt,"",QMessageBox.Warning)
+             self.my_diag("",msgtxt,"",QMessageBox.Warning)
              return "KO"                    
 
         # dircut is obtained from the Process Tab
@@ -313,9 +351,9 @@ def calc_process(self):
                 elif i == 1:
                     dircut = "Y"
                     break
-        else:
+        else:  # if we arrive here none is selected
             msgtxt = self.msg_08m
-            self.myYesDiag("",msgtxt,"",QMessageBox.Warning)
+            self.my_diag("",msgtxt,"",QMessageBox.Warning)
             return "KO"                    
 
         if self.PCCbidir.isChecked(): # bidirectional mode
@@ -323,43 +361,46 @@ def calc_process(self):
                 dircut = 'Xb'
             elif dircut == 'Y':
                 dircut = 'Yb'
-            else:
-                # nothing to be done
+            else: # nothing to be done
                 pass                
             
-        # maybe shape has to be considered in step down calculations ? 
+        # maybe tool shape has to be considered in step down calculations ? 
         # shape = int(glb.t_data[0])
-        # TODO check the alghoritmn to obtain the slices
  
         # TODO check a minimal height for the purpose of having the piece
         # fixed on the base, or maybe create a grid of tabs, in the last pass?
         #
-        #TODO elaborate the negative coordinate strategy 
+        # HINT elaborate the negative coordinate strategy maybe at the gcode
+        # creation with a tranlsation of the final point? 
         z_steps = []
         z_pass = 1
-        # at the height of the piece         
-        z_steps.append(zmax)
+        
+        # HINT add a tolerance ?
+        # start at the height of the work piece          
+        z_steps.append(zmax)  
         c_ht = zmax - zpc
-        if glb.debug > 1:
-            print "wp_h = {0} zpc = {1}".format(wp_h,zpc)
-            print "start loop"
+        if glb.debug[3] == 1:
+            print "ec_logic:calc_process -- wp_h = {0} zpc = {1}".format(wp_h,zpc)
+            print "ec_logic:calc_process --  start loop"
         # FIXME verify for a redundant 0.0 slice
         while z_pass < 100: # set a safety for the number of pass
-            print "c_ht = {0}  zmin = {1} zmax = {2}".format( c_ht,zmin,zmax)
+            if glb.debug[3] == 1:
+                print "ec_logic:calc_process -- c_ht = {0}  zmin = {1} zmax = {2}".format( c_ht,zmin,zmax)
            
             z_steps.append(c_ht)
             z_pass = z_pass + 1
             c_ht = c_ht - zpc
             c_ht = round(c_ht,5)
             if c_ht <= zmin:
-                print c_ht, zmin
+                if glb.debug[3] == 1:
+                    print c_ht, zmin
                 z_steps.append(zmin)
                 break
-        else:
-            print "error in loop"
+        else: #the while loop as reached his max condition  maybe an error?
+            print "ec_logic:calc_process -- error in loop"
 
-        if glb.debug > 1:        
-            print "end loop"    
+        if glb.debug[3] == 1:        
+            print "ec_logic:calc_process -- end loop"    
             print z_steps 
      
 
