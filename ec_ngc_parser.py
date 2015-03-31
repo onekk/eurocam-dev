@@ -15,22 +15,22 @@ def scan_gcode(filename):
     lcnt = 0
     unit = "none"
     command = []
-    fin = open(filename, 'r')    
+    fin = open(filename, 'r')
     for line in fin:
-        lcnt += 1 
+        lcnt += 1
         # Strip comments/spaces/tabs/new line and capitalize. Comment MSG not supported.
-        block = re.sub('\s|\(.*?\)','',line).upper() 
+        block = re.sub('\s|\(.*?\)','',line).upper()
         #block = re.sub('\\\\','',block) # Strip \ block delete character
         #block = re.sub('%','',block) # Strip % program start/stop character
-        
+
         if len(block) == 0 :  # Ignore empty blocks
             #print "Skipping: " + line.strip()
             pass
-        else :  
-            
+        else :
+
             g_cmd = re.findall(r'[^0-9\.\-]+',block) # Extract block command characters
             g_num = re.findall(r'[0-9\.\-]+',block) # Extract block numbers
-            
+
             # G-code block error checks
             # if len(g_cmd) != len(g_num) : print block; raise Exception('Invalid block. Unbalanced word and values.')
             if 'N' in g_cmd :
@@ -42,11 +42,11 @@ def scan_gcode(filename):
                     return ("KO" ,unit, msg)
                 g_cmd = g_cmd[1:]  # Remove line number word
                 g_num = g_num[1:]
-                   
+
             for cmd,num in zip(g_cmd,g_num) :
                 command.append((cmd,num))
-    
-    motions = []            
+
+    motions = []
     for cmd in command:
         if cmd[0] == 'F':
            pass
@@ -58,8 +58,8 @@ def scan_gcode(filename):
            elif cmd[1] ==20:
                unit = "inch"
         else:
-            motions.append(cmd)   
-              
+            motions.append(cmd)
+
     print "motions  {0} \n \n".format(len(motions))
     return ("OK",unit,motions)
 
@@ -70,7 +70,7 @@ def out_point(motions):
     while flag > 0:
         if cnt >= len(motions):
             return points
-        #print cnt, len(motions)    
+        #print cnt, len(motions)
         mot = motions[cnt]
         #print "motion = ", mot,cnt
         mtyp = ''
@@ -82,28 +82,28 @@ def out_point(motions):
             if mot[1] in ('02','2'):
                 mtyp = "cwa"
             if mot[1] in ('03','3'):
-                mtyp = "ccwa"                
+                mtyp = "ccwa"
             if mot[1] in ('90','91'):
                 mtyp = "cc"
         else:
             mtyp = "no motion"
-        #print "Motion = ", mtyp    
+        #print "Motion = ", mtyp
         if mtyp in ("r","n","cwa","ccwa") : #linear motions we expect a coordinate
             block = 0
             idx = cnt
             x = "n"
             y = "n"
-            z = "n"            
+            z = "n"
             while block == 0:
-                #print "Coordinates in while = ",x,y,z                 
+                #print "Coordinates in while = ",x,y,z
                 idx = idx + 1
                 if idx > len(motions):
                     points.append((mtyp ,(x,y,z)))
-                    return points                      
+                    return points
                 mot = motions[idx]
                 #print "mot after check block ", idx, mot
                 if mot[0] in ('X','Y','Z'):
-                    #print "mot is motion" 
+                    #print "mot is motion"
                     if mot[0] is 'X':
                         x = mot[1]
                     if mot[0] is 'Y':
@@ -111,16 +111,16 @@ def out_point(motions):
                     if mot[0] is 'Z':
                         z = mot[1]
                 else:
-                    #print "mot is no motion"                    
+                    #print "mot is no motion"
                     block = 1
-            points.append((mtyp,(x,y,z)))                    
+            points.append((mtyp,(x,y,z)))
             cnt = idx + 1
 
         else:
             print "motion is no lm (idx)", idx
             idx = idx + 1
-        cnt = idx    
-            
+        cnt = idx
+
     return points
 
 def clear_points(points):
@@ -130,10 +130,10 @@ def clear_points(points):
             pass
         else:
             pfilt.append(point)
-     
+
     return pfilt
-    
-def aggregate_tpath(points):    
+
+def aggregate_tpath(points):
     pfilt2 = []
     x = 0.0
     y = 0.0
@@ -174,12 +174,11 @@ def make_tpath(filename):
          return "KO",[]
 
 if __name__ == "__main__":
-        
+
     filename = "test.ngc"
-    
+
     ret,toolpath = make_tpath(filename)
     if ret[0] == "OK":
         print toolpath
     elif ret == "KO":
         print "Errore"
-        

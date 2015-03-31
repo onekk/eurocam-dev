@@ -19,18 +19,18 @@ debug = [1,1,1,1,1]
 #        0 1 2 3 4
 '''
  set the corresponding value to 1 to activate the debug output
- 
+
  0 = debug of the program paths
  1 = NC
- 2 = Gcode     
- 3 = debug the calculation of the toolpath 
+ 2 = Gcode
+ 3 = debug the calculation of the toolpath
  4 = debug the writing on the various tables and the modify dialogs
 '''
 
 localini = 1
 # 0 create the ini file in ./EuroCAM
 # 1 create the ini file in ]~/.config/EuroCAM
-  
+
 #TODO check if work in windows and macs too
 def ini_search_paths(file_name):
     paths = map(
@@ -45,18 +45,18 @@ def ini_search_paths(file_name):
             return path
 
 # These variable are defined here to be used in all the modules.
-# Some of them are translated in the main loop 
+# Some of them are translated in the main loop
 inif_name = "eurocam.ini"
 toolf_name = "tooltable.ini"
 machf_name = "machtable.ini"
-wp_name = "wptable.ini" 
+wp_name = "wptable.ini"
 
 inifile = ini_search_paths(inif_name)
 f_tooltable = ini_search_paths(toolf_name)
 f_machtable = ini_search_paths(machf_name)
 f_wptable = ini_search_paths(wp_name)
 
-model =  [None,None,None] # filename,other data   
+model =  [None,None,None] # filename,other data
 Tools = {"Tool1" : [1,0.0,0.0,0.0,0.0,0.0,0,0,""], "Tool2" : [0,1.0,0.0,0.0,0.0,0.0,0,0,""]}
 Tooldata = ["sha","dia","rad","len","ovl","shd","flu","cc","opt"]
 ## explanation:
@@ -65,8 +65,8 @@ Tooldata = ["sha","dia","rad","len","ovl","shd","flu","cc","opt"]
 # rad = radius
 # len = length
 # flu = number of flutes
-# cc  = (boolean?) center cut or some other info 
-# opt = optional could be used for other info 
+# cc  = (boolean?) center cut or some other info
+# opt = optional could be used for other info
 
 Machs = {"eShapeoko" : [10.00,10.00,10.00,100.00,100.00,100.00,1,"note","p","po"]}
 Machdata = ["mtx","mty","mtz","mfx","mfy","mfz","cot","opt","pre","post"]
@@ -74,12 +74,12 @@ WorkPCs = {"WP1" : [0,15,0,15,0,4,0,""]}
 WorkPcdata = ["xmin","xmax","ymin","ymax","zmin","zmax","mat","note"]
 PCData = []
 # 0 = m_name, 1 = t_name, 2 = feedrate, 3 = plungerate, 4 = safe_height
-# 5 = strat, 6 = dircut,  7 = xyovl,  8 = z_steps   
+# 5 = strat, 6 = dircut,  7 = xyovl,  8 = z_steps
 
 
 #######################
 
-# Variable used to modify the Labels 
+# Variable used to modify the Labels
 
 Radius = ""
 CorRad = ""
@@ -88,7 +88,7 @@ Angle = ""
 
 # Flag
 
-EditTool = False # Used to signal at the  
+EditTool = False # Used to signal at the
 NewTool = False  #
 
 EditMach = False
@@ -99,7 +99,7 @@ NewWP = False
 
 M_Load = False
 
-#### Variables in alphabetical order, downcase names 
+#### Variables in alphabetical order, downcase names
 
 ## B
 basename = "eurocam"
@@ -111,14 +111,14 @@ coord = () # tuple MGCoCB items
 ## D
 datahead = ()
 # debug       # see upper
-degree = ""   # for translate degree unit, hold "deg" in En_US  
+degree = ""   # for translate degree unit, hold "deg" in En_US
 dunit = ""    # Displayed unit message in the top label
 
 ## F
 
 feedrate = [] # xy,z values of feedrate used for Process calculation
 
-# f_machtable # see upper 
+# f_machtable # see upper
 # f_tooltable # see upper
 # f_wptable # see upper
 
@@ -137,18 +137,18 @@ gcodec = []   # Hold the preferences for the G-Code file generation
 
 ## M
 
-# machf_name  # see upper 
-mach_plu = "" # Hold the Machine plural 
+# machf_name  # see upper
+mach_plu = "" # Hold the Machine plural
 mach_sin = "" # Hold the Machine Singular
 machdata = [] # machine data selected in the PC Tab (used for toolpath gen.)
-# model       # see upper 
+# model       # see upper
 m_name = ""
 mod_mot_name = ""
 mot_name = ""
 
 ## N
 newdata = []
-no = ""       # Hold the "No" value displayed in some combobox 
+no = ""       # Hold the "No" value displayed in some combobox
 
 ## O
 oldata = []
@@ -157,11 +157,11 @@ oldata = []
 pathfile = ""
 plungerate = 0
 
-## S 
+## S
 shape = ()    # tuple TGTyp items
 showdata = []
 showhead = []
-stime = "" 
+stime = ""
 spunit = ""   # Speed unit mm/min or IPS (Inch per second)
 #sversion     # see upper
 ## T
@@ -186,12 +186,12 @@ z_steps = []
 # wp_fname   # see upper
 wpdata = []  # WP data selected in the PC Tab (used for toolpath gen.)
 wpdim = [] # hold the Wp data adjusetd with offset in the display window and
-           # ready to be sent to the toolpath generator  
+           # ready to be sent to the toolpath generator
 wp_plu = ""  # Hold the Workpiece plural
 wp_sin = ""  # Hold the Workpiece singular
 ## Y
 yes = ""      # Hold the "Yes" value displayed in some combobox
 
 ## X
-xyfeedrate = 0 
+xyfeedrate = 0
 

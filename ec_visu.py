@@ -8,9 +8,9 @@ import ocl
 import datetime
 import camvtk_mod as camvtk
 import ec_ngc_parser as pgc
-   
+
 def vtk_visualize_toolpath(stlfile,visu,data):
-   
+
     myscreen = camvtk.VTKScreen()
     stl = camvtk.STLSurf(stlfile)
     myscreen.addActor(stl)
@@ -26,21 +26,21 @@ def vtk_visualize_toolpath(stlfile,visu,data):
         toolpath_trace(myscreen, data)
     elif visu == 1:
         show_wp(myscreen,data[1])
-        ret,toolpath = pgc.make_tpath(data[0]) 
-        if ret == "OK":        
+        ret,toolpath = pgc.make_tpath(data[0])
+        if ret == "OK":
             gcodeview(myscreen,toolpath)
         elif ret == "KO":
-            print toolpath        
-  
+            print toolpath
+
     else:
         pass
-        
+
     t = camvtk.Text()
     t.SetPos( (myscreen.width-200, myscreen.height-100) )
     date_text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     t.SetText( "EuroCAM \n " + date_text + "\n Using OpenCAMLib \n" )
     myscreen.addActor(t)
-    
+
     myscreen.render()
     myscreen.iren.Start()
 
@@ -49,12 +49,12 @@ def gcodeview(myscreen,data):
     XYrapidColor = camvtk.green
     feedColor = camvtk.yellow
 
-    pos = ocl.Point(0,0,0) 
-   
+    pos = ocl.Point(0,0,0)
+
     first_pt = data[0][1]
     #print first_pt
     myscreen.addActor( camvtk.Sphere(center=(first_pt[0],first_pt[1],first_pt[2]) , radius=0.1, color=camvtk.green) )
-    pos = ocl.Point(first_pt[0],first_pt[1],first_pt[2])     
+    pos = ocl.Point(first_pt[0],first_pt[1],first_pt[2])
 
     for point in data[1:]:
         pcs = point[1]
@@ -62,9 +62,9 @@ def gcodeview(myscreen,data):
         #print pos1.x,pos1.y,pos1.z
         if point[0] == 'r':
             myscreen.addActor( camvtk.Line(p1=( pos.x,pos.y,pos.z),p2=(pos1.x,pos1.y,pos1.z),color=XYrapidColor) )
-        else:    
+        else:
             myscreen.addActor( camvtk.Line(p1=( pos.x,pos.y,pos.z),p2=(pos1.x,pos1.y,pos1.z),color=feedColor) )
-        pos = ocl.Point(pos1.x,pos1.y,pos1.z) 
+        pos = ocl.Point(pos1.x,pos1.y,pos1.z)
 
     # END retract up to rapid_height
     myscreen.addActor( camvtk.Sphere(center=(pos.x,pos.y,pos.z) , radius=0.1, color=camvtk.red) )
@@ -76,39 +76,39 @@ def show_wp(scr,dims):
     p1 = ocl.Point(dims[0], dims[2], dims[4]) # A
     p2 = ocl.Point(dims[1], dims[2], dims[4]) # B
     scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
-    p1 = ocl.Point(dims[1], dims[2], dims[4]) # B        
+    p1 = ocl.Point(dims[1], dims[2], dims[4]) # B
     p2 = ocl.Point(dims[1], dims[2], dims[5]) # C
-    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))    
-    p1 = ocl.Point(dims[1], dims[2], dims[5]) # C        
+    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
+    p1 = ocl.Point(dims[1], dims[2], dims[5]) # C
     p2 = ocl.Point(dims[0], dims[2], dims[5]) # D
-    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))    
-    p1 = ocl.Point(dims[0], dims[2], dims[5]) # D        
+    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
+    p1 = ocl.Point(dims[0], dims[2], dims[5]) # D
     p2 = ocl.Point(dims[0], dims[3], dims[5]) # E
-    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))    
-    p1 = ocl.Point(dims[0], dims[3], dims[5]) # E        
+    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
+    p1 = ocl.Point(dims[0], dims[3], dims[5]) # E
     p2 = ocl.Point(dims[1], dims[3], dims[5]) # F
-    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))    
-    p1 = ocl.Point(dims[1], dims[3], dims[5]) # F        
+    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
+    p1 = ocl.Point(dims[1], dims[3], dims[5]) # F
     p2 = ocl.Point(dims[1], dims[3], dims[4]) # G
-    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))    
-    p1 = ocl.Point(dims[1], dims[3], dims[4]) # G        
+    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
+    p1 = ocl.Point(dims[1], dims[3], dims[4]) # G
     p2 = ocl.Point(dims[0], dims[3], dims[4]) # H
-    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))    
-    p1 = ocl.Point(dims[0], dims[3], dims[4]) # H        
+    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
+    p1 = ocl.Point(dims[0], dims[3], dims[4]) # H
     p2 = ocl.Point(dims[0], dims[2], dims[4]) # A
-    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))    
+    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
     p1 = ocl.Point(dims[0], dims[2], dims[4]) # A
     p2 = ocl.Point(dims[0], dims[2], dims[5]) # D
-    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))    
+    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
     p1 = ocl.Point(dims[0], dims[3], dims[5]) # E
     p2 = ocl.Point(dims[0], dims[3], dims[4]) # H
-    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))        
+    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
     p1 = ocl.Point(dims[1], dims[2], dims[5]) # C
     p2 = ocl.Point(dims[1], dims[3], dims[5]) # F
-    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))    
+    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
     p1 = ocl.Point(dims[1], dims[2], dims[4]) # B
     p2 = ocl.Point(dims[1], dims[3], dims[4]) # G
-    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))           
+    scr.addActor( camvtk.Line(p1=(p1.x,p1.y,p1.z),p2=(p2.x,p2.y,p2.z),color=mdCol))
 
 
 def toolpath_trace(myscreen, data):
@@ -121,17 +121,17 @@ def toolpath_trace(myscreen, data):
     # 1) lift to clearance height
     # 2) XY rapid to start of path
     # 3) plunge to correct z-depth
-    # 4) feed along path until end    
+    # 4) feed along path until end
     pos = ocl.Point(0,0,0) # keep track of the current position of the tool
     first = True
     # this is working for the zig paths
-    
+
     for path in toolpaths:
         first_pt = path[0]
         if (first == True): # green sphere at path start
             myscreen.addActor( camvtk.Sphere(center=(first_pt.x,first_pt.y,rapid_height) , radius=0.1, color=camvtk.green) )
             # at start of program, assume we have already a rapid move here
-            pos = ocl.Point(first_pt.x,first_pt.y,first_pt.z) 
+            pos = ocl.Point(first_pt.x,first_pt.y,first_pt.z)
             first = False
         else: # not the very first move
             # retract up to rapid_height
@@ -157,6 +157,6 @@ def toolpath_trace(myscreen, data):
     myscreen.addActor( camvtk.Sphere(center=(pos.x,pos.y,rapid_height) , radius=0.1, color=camvtk.red) )
 
     camvtk.drawArrows(myscreen,center=(-0.5,-0.5,-0.5)) # XYZ coordinate arrows
-    
+
 
 
