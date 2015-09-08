@@ -3,7 +3,7 @@ It would be a pratical and fast replacement of pycam for linux and maybe other O
 
 The hard work is done by OpenCAMLib from https://github.com/aewallin/opencamlib.
 
-##The developmend is stopped see the https://github.com/onekk/eurocam-dev/wiki for more information.
+##The developmend is stopped see https://github.com/onekk/eurocam-dev/wiki for more information.
 
 see in the i18n directory the help file, it can be visualized also through the help menu
 
