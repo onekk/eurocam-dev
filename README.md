@@ -3,7 +3,7 @@ It would be a pratical and fast replacement of pycam for linux and maybe other O
 
 The hard work is done by OpenCAMLib from https://github.com/aewallin/opencamlib.
 
-The program is still in Alpha stage but the main core is almost done.
+##The developmend is stopped see the wiki for more information.
 
 see in the i18n directory the help file, it can be visualized also through the help menu
 
